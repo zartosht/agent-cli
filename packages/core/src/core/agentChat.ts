@@ -198,7 +198,7 @@ export class AgentChat {
     }
 
     const currentModel = this.config.getModel();
-    const fallbackModel = DEFAULT_AGENT_FLASH_MODEL;
+    const fallbackModel = this.config.getFastModel();
 
     // Don't fallback if already using Flash model
     if (currentModel === fallbackModel) {
@@ -257,7 +257,7 @@ export class AgentChat {
     try {
       const apiCall = () =>
         this.contentGenerator.generateContent({
-          model: this.config.getModel() || DEFAULT_AGENT_FLASH_MODEL,
+          model: this.config.getModel() || this.config.getFastModel(),
           contents: requestContents,
           config: { ...this.generationConfig, ...params.config },
         });

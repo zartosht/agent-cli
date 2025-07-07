@@ -41,6 +41,7 @@ import {
 import {
   DEFAULT_AGENT_EMBEDDING_MODEL,
   DEFAULT_AGENT_FLASH_MODEL,
+  getFastModelForAuthType,
 } from './models.js';
 import { ClearcutLogger } from '../telemetry/clearcut-logger/clearcut-logger.js';
 
@@ -130,6 +131,7 @@ export interface ConfigParameters {
   bugCommand?: BugCommandSettings;
   model: string;
   extensionContextFilePaths?: string[];
+  authType?: AuthType;
 }
 
 export class Config {
@@ -169,6 +171,7 @@ export class Config {
   private readonly model: string;
   private readonly extensionContextFilePaths: string[];
   private modelSwitchedDuringSession: boolean = false;
+  private currentAuthType?: AuthType;
   flashFallbackHandler?: FlashFallbackHandler;
 
   constructor(params: ConfigParameters) {
@@ -211,6 +214,7 @@ export class Config {
     this.bugCommand = params.bugCommand;
     this.model = params.model;
     this.extensionContextFilePaths = params.extensionContextFilePaths ?? [];
+    this.currentAuthType = params.authType;
 
     if (params.contextFileName) {
       setAgentMdFilename(params.contextFileName);
@@ -230,6 +234,9 @@ export class Config {
   }
 
   async refreshAuth(authMethod: AuthType) {
+    // Store the current auth type
+    this.currentAuthType = authMethod;
+    
     // Always use the original default model when switching auth methods
     // This ensures users don't stay on Flash after switching between auth types
     // and allows API key users to get proper fallback behavior from getEffectiveModel
@@ -267,6 +274,17 @@ export class Config {
 
   getModel(): string {
     return this.contentGeneratorConfig?.model || this.model;
+  }
+
+  /**
+   * Get the appropriate fast/flash model for the current auth type
+   */
+  getFastModel(): string {
+    if (this.currentAuthType) {
+      return getFastModelForAuthType(this.currentAuthType);
+    }
+    // Fallback to the old default behavior
+    return DEFAULT_AGENT_FLASH_MODEL;
   }
 
   setModel(newModel: string): void {

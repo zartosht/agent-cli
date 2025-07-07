@@ -90,6 +90,10 @@ export class AgentClient {
     return this.chat;
   }
 
+  getConfig(): Config {
+    return this.config;
+  }
+
   async getHistory(): Promise<Content[]> {
     return this.getChat().getHistory();
   }
@@ -256,10 +260,11 @@ export class AgentClient {
     contents: Content[],
     schema: SchemaUnion,
     abortSignal: AbortSignal,
-    model: string = DEFAULT_AGENT_FLASH_MODEL,
+    model?: string,
     config: GenerateContentConfig = {},
   ): Promise<Record<string, unknown>> {
     try {
+      const effectiveModel = model || this.config.getFastModel();
       const userMemory = this.config.getUserMemory();
       const systemInstruction = getCoreSystemPrompt(userMemory);
       const requestConfig = {
@@ -270,7 +275,7 @@ export class AgentClient {
 
       const apiCall = () =>
         this.getContentGenerator().generateContent({
-          model,
+          model: effectiveModel,
           config: {
             ...requestConfig,
             systemInstruction,
@@ -507,7 +512,7 @@ export class AgentClient {
     }
 
     const currentModel = this.config.getModel();
-    const fallbackModel = DEFAULT_AGENT_FLASH_MODEL;
+    const fallbackModel = this.config.getFastModel();
 
     // Don't fallback if already using Flash model
     if (currentModel === fallbackModel) {

@@ -17,8 +17,12 @@ import {
   DEFAULT_AGENT_EMBEDDING_MODEL,
   FileDiscoveryService,
   TelemetryTarget,
+  getDefaultModelForAuthType,
+  getEmbeddingModelForAuthType,
+  AuthType,
 } from '@zartosht/agent-cli-core';
 import { Settings } from './settings.js';
+import { loadEnvironment } from './settings.js';
 
 import { Extension } from './extension.js';
 import { getCliVersion } from '../utils/version.js';
@@ -33,6 +37,26 @@ const logger = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   error: (...args: any[]) => console.error('[ERROR]', ...args),
 };
+
+/**
+ * Detect the current auth type based on environment variables
+ */
+function detectAuthTypeFromEnvironment(): string {
+  if (process.env.OPENAI_API_KEY) {
+    return AuthType.USE_OPENAI;
+  }
+  
+  if (process.env.CUSTOM_API_KEY && process.env.CUSTOM_API_BASE_URL) {
+    return AuthType.USE_CUSTOM_API;
+  }
+  
+  if (process.env.AGENT_API_KEY) {
+    return AuthType.USE_AGENT;
+  }
+  
+  // Default to USE_AGENT if no specific auth is detected
+  return AuthType.USE_AGENT;
+}
 
 interface CliArgs {
   model: string | undefined;
@@ -161,6 +185,8 @@ export async function loadCliConfig(
   extensions: Extension[],
   sessionId: string,
 ): Promise<Config> {
+  loadEnvironment(); // Load environment variables first
+  
   const argv = await parseArguments();
   const debugMode = argv.debug || false;
 
@@ -191,9 +217,24 @@ export async function loadCliConfig(
 
   const sandboxConfig = await loadSandboxConfig(settings, argv);
 
+  const authType = detectAuthTypeFromEnvironment();
+  const defaultEmbeddingModel = getEmbeddingModelForAuthType(authType);
+  
+  // Determine the effective model:
+  // 1. Use explicitly provided model via --model flag (if different from yargs default)
+  // 2. Use AGENT_MODEL environment variable
+  // 3. Use auth-type-specific default model
+  let effectiveModel = argv.model;
+  const yargsDefault = process.env.AGENT_MODEL || DEFAULT_AGENT_MODEL;
+  
+  if (effectiveModel === yargsDefault && !process.env.AGENT_MODEL) {
+    // If using the yargs default and no AGENT_MODEL is set, choose based on auth type
+    effectiveModel = getDefaultModelForAuthType(authType);
+  }
+
   return new Config({
     sessionId,
-    embeddingModel: DEFAULT_AGENT_EMBEDDING_MODEL,
+    embeddingModel: defaultEmbeddingModel,
     sandbox: sandboxConfig,
     targetDir: process.cwd(),
     debugMode,
@@ -237,8 +278,9 @@ export async function loadCliConfig(
     cwd: process.cwd(),
     fileDiscoveryService: fileService,
     bugCommand: settings.bugCommand,
-    model: argv.model!,
+    model: effectiveModel!,
     extensionContextFilePaths,
+    authType: authType as AuthType,
   });
 }
 

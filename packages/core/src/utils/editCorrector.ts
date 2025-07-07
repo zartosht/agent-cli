@@ -15,7 +15,6 @@ import { EditToolParams } from '../tools/edit.js';
 import { LruCache } from './LruCache.js';
 import { DEFAULT_AGENT_FLASH_MODEL } from '../config/models.js';
 
-const EditModel = DEFAULT_AGENT_FLASH_MODEL;
 const EditConfig: GenerateContentConfig = {
   thinkingConfig: {
     thinkingBudget: 0,
@@ -282,7 +281,7 @@ Return ONLY the corrected target snippet in the specified JSON format with the k
       contents,
       OLD_STRING_CORRECTION_SCHEMA,
       abortSignal,
-      EditModel,
+      agentClient.getConfig().getFastModel(),
       EditConfig,
     );
 
@@ -370,7 +369,7 @@ Return ONLY the corrected string in the specified JSON format with the key 'corr
       contents,
       NEW_STRING_CORRECTION_SCHEMA,
       abortSignal,
-      EditModel,
+      agentClient.getConfig().getFastModel(),
       EditConfig,
     );
 
@@ -439,7 +438,7 @@ Return ONLY the corrected string in the specified JSON format with the key 'corr
       contents,
       CORRECT_NEW_STRING_ESCAPING_SCHEMA,
       abortSignal,
-      EditModel,
+      agentClient.getConfig().getFastModel(),
       EditConfig,
     );
 
@@ -505,7 +504,7 @@ Return ONLY the corrected string in the specified JSON format with the key 'corr
       contents,
       CORRECT_STRING_ESCAPING_SCHEMA,
       abortSignal,
-      EditModel,
+      client.getConfig().getFastModel(),
       EditConfig,
     );
 
