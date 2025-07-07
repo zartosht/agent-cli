@@ -12,6 +12,7 @@ import {
   shutdownTelemetry,
   isTelemetrySdkInitialized,
 } from '@zartosht/agent-cli-core';
+import type { Content, Part, FunctionCall } from '@google/genai';
 
 import { parseAndFormatApiError } from './ui/utils/errorParsing.js';
 
@@ -30,8 +31,8 @@ function getResponseText(response: any): string | null {
         return null;
       }
       return candidate.content.parts
-        .filter((part) => part.text)
-        .map((part) => part.text)
+        .filter((part: Part) => part.text)
+        .map((part: Part) => part.text)
         .join('');
     }
   }

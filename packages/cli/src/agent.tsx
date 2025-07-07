@@ -103,14 +103,28 @@ export async function main() {
   const extensions = loadExtensions(workspaceRoot);
   const config = await loadCliConfig(settings.merged, extensions, sessionId);
 
-  // set default fallback to agent api key
+  // set default fallback auth types based on available environment variables
   // this has to go after load cli because that's where the env is set
-  if (!settings.merged.selectedAuthType && process.env.AGENT_API_KEY) {
-    settings.setValue(
-      SettingScope.User,
-      'selectedAuthType',
-      AuthType.USE_AGENT,
-    );
+  if (!settings.merged.selectedAuthType) {
+    if (process.env.AGENT_API_KEY) {
+      settings.setValue(
+        SettingScope.User,
+        'selectedAuthType',
+        AuthType.USE_AGENT,
+      );
+    } else if (process.env.OPENAI_API_KEY) {
+      settings.setValue(
+        SettingScope.User,
+        'selectedAuthType',
+        AuthType.USE_OPENAI,
+      );
+    } else if (process.env.CUSTOM_API_KEY && process.env.CUSTOM_API_BASE_URL) {
+      settings.setValue(
+        SettingScope.User,
+        'selectedAuthType',
+        AuthType.USE_CUSTOM_API,
+      );
+    }
   }
 
   setMaxSizedBoxDebugging(config.getDebugMode());
@@ -280,16 +294,26 @@ async function validateNonInterActiveAuth(
   nonInteractiveConfig: Config,
 ) {
   // making a special case for the cli. many headless environments might not have a settings.json set
-  // so if AGENT_API_KEY is set, we'll use that. However since the oauth things are interactive anyway, we'll
+  // so if any API key is set, we'll use that. However since oauth things are interactive anyway, we'll
   // still expect that exists
-  if (!selectedAuthType && !process.env.AGENT_API_KEY) {
-    console.error(
-      `Please set an Auth method in your ${USER_SETTINGS_PATH} OR specify AGENT_API_KEY env variable file before running`,
-    );
-    process.exit(1);
+  if (!selectedAuthType) {
+    if (process.env.AGENT_API_KEY) {
+      selectedAuthType = AuthType.USE_AGENT;
+    } else if (process.env.OPENAI_API_KEY) {
+      selectedAuthType = AuthType.USE_OPENAI;
+    } else if (process.env.CUSTOM_API_KEY && process.env.CUSTOM_API_BASE_URL) {
+      selectedAuthType = AuthType.USE_CUSTOM_API;
+    } else {
+      console.error(
+        `Please set an Auth method in your ${USER_SETTINGS_PATH} OR specify one of these environment variables:`,
+      );
+      console.error('  - AGENT_API_KEY (for Gemini API)');
+      console.error('  - OPENAI_API_KEY (for OpenAI API)');
+      console.error('  - CUSTOM_API_KEY + CUSTOM_API_BASE_URL (for custom OpenAI-compatible APIs)');
+      process.exit(1);
+    }
   }
 
-  selectedAuthType = selectedAuthType || AuthType.USE_AGENT;
   const err = validateAuthMethod(selectedAuthType);
   if (err != null) {
     console.error(err);

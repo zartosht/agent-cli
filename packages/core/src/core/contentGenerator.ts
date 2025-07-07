@@ -16,6 +16,7 @@ import {
 import { createCodeAssistContentGenerator } from '../code_assist/codeAssist.js';
 import { DEFAULT_AGENT_MODEL } from '../config/models.js';
 import { getEffectiveModel } from './modelCheck.js';
+import { OpenAIContentGenerator } from './openaiContentGenerator.js';
 
 /**
  * Interface abstracting the core functionalities for generating content and counting tokens.
@@ -38,6 +39,8 @@ export enum AuthType {
   LOGIN_WITH_GOOGLE = 'oauth-personal',
   USE_AGENT = 'agent-api-key',
   USE_VERTEX_AI = 'vertex-ai',
+  USE_OPENAI = 'openai-api-key',
+  USE_CUSTOM_API = 'custom-api-key',
 }
 
 export type ContentGeneratorConfig = {
@@ -56,6 +59,8 @@ export async function createContentGeneratorConfig(
   const googleApiKey = process.env.GOOGLE_API_KEY;
   const googleCloudProject = process.env.GOOGLE_CLOUD_PROJECT;
   const googleCloudLocation = process.env.GOOGLE_CLOUD_LOCATION;
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+  const customApiKey = process.env.CUSTOM_API_KEY;
 
   // Use runtime model from config if available, otherwise fallback to parameter or default
   const effectiveModel = config?.getModel?.() || model || DEFAULT_AGENT_MODEL;
@@ -77,6 +82,18 @@ export async function createContentGeneratorConfig(
       contentGeneratorConfig.model,
     );
 
+    return contentGeneratorConfig;
+  }
+
+  if (authType === AuthType.USE_OPENAI && openaiApiKey) {
+    contentGeneratorConfig.apiKey = openaiApiKey;
+    // Note: We'll implement OpenAI model checking in step 4
+    return contentGeneratorConfig;
+  }
+
+  if (authType === AuthType.USE_CUSTOM_API && customApiKey) {
+    contentGeneratorConfig.apiKey = customApiKey;
+    // Note: We'll implement custom API model checking in step 4
     return contentGeneratorConfig;
   }
 
@@ -128,6 +145,34 @@ export async function createContentGenerator(
     });
 
     return googleGenAI.models;
+  }
+
+  if (config.authType === AuthType.USE_OPENAI) {
+    if (!config.apiKey) {
+      throw new Error('OpenAI API key is required');
+    }
+    
+    return new OpenAIContentGenerator({
+      apiKey: config.apiKey,
+      model: config.model,
+    });
+  }
+
+  if (config.authType === AuthType.USE_CUSTOM_API) {
+    if (!config.apiKey) {
+      throw new Error('Custom API key is required');
+    }
+    
+    const baseURL = process.env.CUSTOM_API_BASE_URL;
+    if (!baseURL) {
+      throw new Error('CUSTOM_API_BASE_URL environment variable is required');
+    }
+    
+    return new OpenAIContentGenerator({
+      apiKey: config.apiKey,
+      baseURL,
+      model: config.model,
+    });
   }
 
   throw new Error(
