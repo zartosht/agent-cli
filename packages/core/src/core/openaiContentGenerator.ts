@@ -29,6 +29,7 @@ import { ContentGenerator } from './contentGenerator.js';
 export class OpenAIContentGenerator implements ContentGenerator {
   private client: OpenAI;
   private model: string;
+  private toolCallIdMap: Map<string, string> = new Map(); // Maps function names to tool call IDs
 
   constructor(config: { apiKey: string; baseURL?: string; model: string }) {
     this.client = new OpenAI({
@@ -63,9 +64,60 @@ export class OpenAIContentGenerator implements ContentGenerator {
       try {
         const stream = await self.client.chat.completions.create(openaiRequest);
         
+        let accumulatedContent = '';
+        let accumulatedToolCalls: any[] = [];
+        
         for await (const chunk of stream as any) {
-          if (chunk.choices?.[0]?.delta?.content) {
+          const choice = chunk.choices?.[0];
+          if (!choice) continue;
+
+          const delta = choice.delta;
+          
+          // Handle text content
+          if (delta?.content) {
+            accumulatedContent += delta.content;
             yield self.convertFromOpenAIStreamChunk(chunk);
+          }
+          
+          // Handle tool calls in streaming
+          if (delta?.tool_calls) {
+            for (const toolCall of delta.tool_calls) {
+              const index = toolCall.index || 0;
+              
+              // Initialize tool call if needed
+              if (!accumulatedToolCalls[index]) {
+                accumulatedToolCalls[index] = {
+                  id: toolCall.id || `call_${index}_${Date.now()}`,
+                  type: 'function',
+                  function: {
+                    name: toolCall.function?.name || '',
+                    arguments: toolCall.function?.arguments || '',
+                  },
+                };
+              } else {
+                // Accumulate arguments
+                if (toolCall.function?.arguments) {
+                  accumulatedToolCalls[index].function.arguments += toolCall.function.arguments;
+                }
+                if (toolCall.function?.name) {
+                  accumulatedToolCalls[index].function.name = toolCall.function.name;
+                }
+              }
+            }
+          }
+          
+          // If this is the final chunk, yield tool calls
+          if (choice.finish_reason && accumulatedToolCalls.length > 0) {
+            const mockResponse = {
+              choices: [{
+                message: {
+                  tool_calls: accumulatedToolCalls,
+                },
+                finish_reason: choice.finish_reason,
+              }],
+              usage: chunk.usage,
+            };
+            yield self.convertFromOpenAIResponse(mockResponse);
           }
         }
       } catch (error) {
@@ -172,15 +224,37 @@ export class OpenAIContentGenerator implements ContentGenerator {
     
     for (const content of contents) {
       if (content.role === 'user') {
-        messages.push({
-          role: 'user',
-          content: this.extractTextFromParts(content.parts || []),
-        });
+        // Check if this is a function response
+        if (this.isFunctionResponseContent(content)) {
+          // Handle function responses
+          for (const part of content.parts || []) {
+            if ((part as any).functionResponse) {
+              const functionResponse = (part as any).functionResponse;
+              const functionName = functionResponse.name;
+              const toolCallId = this.toolCallIdMap.get(functionName) || `call_${functionName}_${Date.now()}`;
+              
+              messages.push({
+                role: 'tool',
+                tool_call_id: toolCallId,
+                content: JSON.stringify(functionResponse.response || {}),
+              });
+            }
+          }
+        } else {
+          // Regular user message
+          const textContent = this.extractTextFromParts(content.parts || []);
+          if (textContent.trim()) {
+            messages.push({
+              role: 'user',
+              content: textContent,
+            });
+          }
+        }
       } else if (content.role === 'model') {
         const text = this.extractTextFromParts(content.parts || []);
         const functionCalls = this.extractFunctionCallsFromParts(content.parts || []);
         
-        if (text) {
+        if (text && text.trim()) {
           messages.push({
             role: 'assistant',
             content: text,
@@ -189,27 +263,25 @@ export class OpenAIContentGenerator implements ContentGenerator {
         
         // Handle function calls
         if (functionCalls.length > 0) {
-          messages.push({
-            role: 'assistant',
-            content: null,
-            tool_calls: functionCalls.map((fc, index) => ({
-              id: `call_${index}`,
+          const toolCalls = functionCalls.map((fc, index) => {
+            const toolCallId = fc.id || `call_${fc.name}_${Date.now()}_${index}`;
+            // Store the mapping for later function responses
+            this.toolCallIdMap.set(fc.name || 'unknown', toolCallId);
+            
+            return {
+              id: toolCallId,
               type: 'function',
               function: {
                 name: fc.name,
-                arguments: JSON.stringify(fc.args),
+                arguments: JSON.stringify(fc.args || {}),
               },
-            })),
+            };
           });
-        }
-      } else if (content.role === 'function') {
-        // Handle function responses
-        if (content.parts && content.parts.length > 0) {
-          const functionResponse = content.parts[0] as any;
+          
           messages.push({
-            role: 'tool',
-            tool_call_id: functionResponse.functionCall?.name || 'unknown',
-            content: JSON.stringify(functionResponse.functionResponse?.response),
+            role: 'assistant',
+            content: null,
+            tool_calls: toolCalls,
           });
         }
       }
@@ -236,6 +308,7 @@ export class OpenAIContentGenerator implements ContentGenerator {
     }
 
     const parts: Part[] = [];
+    const functionCalls: FunctionCall[] = [];
     
     if (choice.message?.content) {
       parts.push({ text: choice.message.content });
@@ -244,29 +317,48 @@ export class OpenAIContentGenerator implements ContentGenerator {
     // Handle tool calls
     if (choice.message?.tool_calls) {
       for (const toolCall of choice.message.tool_calls) {
+        // Store the tool call ID mapping
+        this.toolCallIdMap.set(toolCall.function.name, toolCall.id);
+        
+        const functionCall = {
+          id: toolCall.id,
+          name: toolCall.function.name,
+          args: JSON.parse(toolCall.function.arguments || '{}'),
+        };
+        
         parts.push({
-          functionCall: {
-            name: toolCall.function.name,
-            args: JSON.parse(toolCall.function.arguments || '{}'),
-          },
+          functionCall,
         } as any);
+        
+        // Also add to the functionCalls array for compatibility
+        functionCalls.push(functionCall);
       }
     }
 
-    const genResponse = new GenerateContentResponse();
-    genResponse.candidates = [
-      {
-        content: {
-          role: 'model',
-          parts,
+    // Create response as object literal to allow setting functionCalls
+    const genResponse: GenerateContentResponse = {
+      candidates: [
+        {
+          content: {
+            role: 'model',
+            parts,
+          },
+          finishReason: this.mapFinishReason(choice.finish_reason) as FinishReason,
         },
-        finishReason: this.mapFinishReason(choice.finish_reason) as FinishReason,
+      ],
+      usageMetadata: {
+        promptTokenCount: response.usage?.prompt_tokens || 0,
+        candidatesTokenCount: response.usage?.completion_tokens || 0,
+        totalTokenCount: response.usage?.total_tokens || 0,
       },
-    ];
-    genResponse.usageMetadata = {
-      promptTokenCount: response.usage?.prompt_tokens || 0,
-      candidatesTokenCount: response.usage?.completion_tokens || 0,
-      totalTokenCount: response.usage?.total_tokens || 0,
+      // Set the functionCalls property for compatibility with existing code
+      functionCalls: functionCalls.length > 0 ? functionCalls : undefined,
+      // Set other required properties from the interface
+      promptFeedback: { safetyRatings: [] },
+      text: undefined,
+      data: undefined,
+      executableCode: undefined,
+      codeExecutionResult: undefined,
     };
     
     return genResponse;
@@ -276,16 +368,25 @@ export class OpenAIContentGenerator implements ContentGenerator {
     const choice = chunk.choices?.[0];
     const content = choice?.delta?.content || '';
     
-    const genResponse = new GenerateContentResponse();
-    genResponse.candidates = [
-      {
-        content: {
-          role: 'model',
-          parts: content ? [{ text: content }] : [],
+    // Create response as object literal for consistency
+    const genResponse: GenerateContentResponse = {
+      candidates: [
+        {
+          content: {
+            role: 'model',
+            parts: content ? [{ text: content }] : [],
+          },
+          finishReason: choice?.finish_reason ? this.mapFinishReason(choice.finish_reason) as FinishReason : undefined,
         },
-        finishReason: choice?.finish_reason ? this.mapFinishReason(choice.finish_reason) as FinishReason : undefined,
-      },
-    ];
+      ],
+      // Set default values for required properties
+      promptFeedback: { safetyRatings: [] },
+      text: undefined,
+      data: undefined,
+      functionCalls: undefined,
+      executableCode: undefined,
+      codeExecutionResult: undefined,
+    };
     
     return genResponse;
   }
@@ -307,6 +408,14 @@ export class OpenAIContentGenerator implements ContentGenerator {
     return parts
       .filter(part => (part as any).functionCall)
       .map(part => (part as any).functionCall);
+  }
+
+  private isFunctionResponseContent(content: Content): boolean {
+    return (
+      content.role === 'user' &&
+      !!content.parts &&
+      content.parts.every((part) => !!(part as any).functionResponse)
+    );
   }
 
   private mapFinishReason(reason: string | null): string {
