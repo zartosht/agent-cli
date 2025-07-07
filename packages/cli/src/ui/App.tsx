@@ -18,7 +18,7 @@ import {
 } from 'ink';
 import { StreamingState, type HistoryItem, MessageType } from './types.js';
 import { useTerminalSize } from './hooks/useTerminalSize.js';
-import { useGeminiStream } from './hooks/useGeminiStream.js';
+import { useAgentStream } from './hooks/useAgentStream.js';
 import { useLoadingIndicator } from './hooks/useLoadingIndicator.js';
 import { useThemeCommand } from './hooks/useThemeCommand.js';
 import { useAuthCommand } from './hooks/useAuthCommand.js';
@@ -38,7 +38,7 @@ import { AuthInProgress } from './components/AuthInProgress.js';
 import { EditorSettingsDialog } from './components/EditorSettingsDialog.js';
 import { Colors } from './colors.js';
 import { Help } from './components/Help.js';
-import { loadHierarchicalGeminiMemory } from '../config/config.js';
+import { loadHierarchicalAgentMemory } from '../config/config.js';
 import { LoadedSettings } from '../config/settings.js';
 import { Tips } from './components/Tips.js';
 import { useConsolePatcher } from './components/ConsolePatcher.js';
@@ -50,11 +50,11 @@ import process from 'node:process';
 import {
   getErrorMessage,
   type Config,
-  getAllGeminiMdFilenames,
+  getAllAgentMdFilenames,
   ApprovalMode,
   isEditorAvailable,
   EditorType,
-} from '@google/gemini-cli-core';
+} from '@zartosht/agent-cli-core';
 import { validateAuthMethod } from '../config/auth.js';
 import { useLogger } from './hooks/useLogger.js';
 import { StreamingContext } from './contexts/StreamingContext.js';
@@ -110,7 +110,7 @@ const App = ({ config, settings, startupWarnings = [] }: AppProps) => {
     setStaticKey((prev) => prev + 1);
   }, [setStaticKey, stdout]);
 
-  const [geminiMdFileCount, setGeminiMdFileCount] = useState<number>(0);
+  const [agentMdFileCount, setAgentMdFileCount] = useState<number>(0);
   const [debugMessage, setDebugMessage] = useState<string>('');
   const [showHelp, setShowHelp] = useState<boolean>(false);
   const [themeError, setThemeError] = useState<string | null>(null);
@@ -182,20 +182,20 @@ const App = ({ config, settings, startupWarnings = [] }: AppProps) => {
     addItem(
       {
         type: MessageType.INFO,
-        text: 'Refreshing hierarchical memory (GEMINI.md or other context files)...',
+        text: 'Refreshing hierarchical memory (AGENT.md or other context files)...',
       },
       Date.now(),
     );
     try {
-      const { memoryContent, fileCount } = await loadHierarchicalGeminiMemory(
+      const { memoryContent, fileCount } = await loadHierarchicalAgentMemory(
         process.cwd(),
         config.getDebugMode(),
         config.getFileService(),
         config.getExtensionContextFilePaths(),
       );
       config.setUserMemory(memoryContent);
-      config.setGeminiMdFileCount(fileCount);
-      setGeminiMdFileCount(fileCount);
+      config.setAgentMdFileCount(fileCount);
+      setAgentMdFileCount(fileCount);
 
       addItem(
         {
@@ -249,8 +249,8 @@ const App = ({ config, settings, startupWarnings = [] }: AppProps) => {
         {
           type: MessageType.INFO,
           text: `⚡ Slow response times detected. Automatically switching from ${currentModel} to ${fallbackModel} for faster responses for the remainder of this session.
-⚡ To avoid this you can either upgrade to Standard tier. See: https://goo.gle/set-up-gemini-code-assist
-⚡ Or you can utilize a Gemini API Key. See: https://goo.gle/gemini-cli-docs-auth#gemini-api-key
+⚡ To avoid this you can either upgrade to Standard tier. See: https://goo.gle/set-up-agent-code-assist
+⚡ Or you can utilize a Agent API Key. See: https://goo.gle/agent-cli-docs-auth#agent-api-key
 ⚡ You can switch authentication methods by typing /auth`,
         },
         Date.now(),
@@ -383,7 +383,7 @@ const App = ({ config, settings, startupWarnings = [] }: AppProps) => {
 
   useEffect(() => {
     if (config) {
-      setGeminiMdFileCount(config.getGeminiMdFileCount());
+      setAgentMdFileCount(config.getAgentMdFileCount());
     }
   }, [config]);
 
@@ -406,10 +406,10 @@ const App = ({ config, settings, startupWarnings = [] }: AppProps) => {
     streamingState,
     submitQuery,
     initError,
-    pendingHistoryItems: pendingGeminiHistoryItems,
+    pendingHistoryItems: pendingAgentHistoryItems,
     thought,
-  } = useGeminiStream(
-    config.getGeminiClient(),
+  } = useAgentStream(
+    config.getAgentClient(),
     history,
     addItem,
     setShowHelp,
@@ -421,7 +421,7 @@ const App = ({ config, settings, startupWarnings = [] }: AppProps) => {
     onAuthError,
     performMemoryRefresh,
   );
-  pendingHistoryItems.push(...pendingGeminiHistoryItems);
+  pendingHistoryItems.push(...pendingAgentHistoryItems);
   const { elapsedTime, currentLoadingPhrase } =
     useLoadingIndicator(streamingState);
   const showAutoAcceptIndicator = useAutoAcceptIndicator({ config });
@@ -539,7 +539,7 @@ const App = ({ config, settings, startupWarnings = [] }: AppProps) => {
     if (fromSettings) {
       return Array.isArray(fromSettings) ? fromSettings : [fromSettings];
     }
-    return getAllGeminiMdFilenames();
+    return getAllAgentMdFilenames();
   }, [settings.merged.contextFileName]);
 
   if (quittingMessages) {
@@ -719,7 +719,7 @@ const App = ({ config, settings, startupWarnings = [] }: AppProps) => {
                 width="100%"
               >
                 <Box>
-                  {process.env.GEMINI_SYSTEM_MD && (
+                  {process.env.AGENT_SYSTEM_MD && (
                     <Text color={Colors.AccentRed}>|⌐■_■| </Text>
                   )}
                   {ctrlCPressedOnce ? (
@@ -732,7 +732,7 @@ const App = ({ config, settings, startupWarnings = [] }: AppProps) => {
                     </Text>
                   ) : (
                     <ContextSummaryDisplay
-                      geminiMdFileCount={geminiMdFileCount}
+                      agentMdFileCount={agentMdFileCount}
                       contextFileNames={contextFileNames}
                       mcpServers={config.getMcpServers()}
                       showToolDescriptions={showToolDescriptions}

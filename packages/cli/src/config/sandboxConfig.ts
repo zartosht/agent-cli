@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { SandboxConfig } from '@google/gemini-cli-core';
+import { SandboxConfig } from '@zartosht/agent-cli-core';
 import commandExists from 'command-exists';
 import * as os from 'node:os';
 import { getPackageJson } from '../utils/package.js';
@@ -37,7 +37,7 @@ function getSandboxCommand(
 
   // note environment variable takes precedence over argument (from command line or settings)
   const environmentConfiguredSandbox =
-    process.env.GEMINI_SANDBOX?.toLowerCase().trim() ?? '';
+    process.env.AGENT_SANDBOX?.toLowerCase().trim() ?? '';
   sandbox =
     environmentConfiguredSandbox?.length > 0
       ? environmentConfiguredSandbox
@@ -63,7 +63,7 @@ function getSandboxCommand(
       return sandbox;
     }
     console.error(
-      `ERROR: missing sandbox command '${sandbox}' (from GEMINI_SANDBOX)`,
+      `ERROR: missing sandbox command '${sandbox}' (from AGENT_SANDBOX)`,
     );
     process.exit(1);
   }
@@ -81,8 +81,8 @@ function getSandboxCommand(
   // throw an error if user requested sandbox but no command was found
   if (sandbox === true) {
     console.error(
-      'ERROR: GEMINI_SANDBOX is true but failed to determine command for sandbox; ' +
-        'install docker or podman or specify command in GEMINI_SANDBOX',
+      'ERROR: AGENT_SANDBOX is true but failed to determine command for sandbox; ' +
+        'install docker or podman or specify command in AGENT_SANDBOX',
     );
     process.exit(1);
   }
@@ -100,7 +100,7 @@ export async function loadSandboxConfig(
   const packageJson = await getPackageJson();
   const image =
     argv['sandbox-image'] ??
-    process.env.GEMINI_SANDBOX_IMAGE ??
+    process.env.AGENT_SANDBOX_IMAGE ??
     packageJson?.config?.sandboxImageUri;
 
   return command && image ? { command, image } : undefined;

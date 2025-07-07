@@ -20,14 +20,14 @@ import {
   Config,
   Config as ActualConfigType,
   ApprovalMode,
-} from '@google/gemini-cli-core';
+} from '@zartosht/agent-cli-core';
 import { useInput, type Key as InkKey } from 'ink';
 
 vi.mock('ink');
 
-vi.mock('@google/gemini-cli-core', async () => {
+vi.mock('@zartosht/agent-cli-core', async () => {
   const actualServerModule = (await vi.importActual(
-    '@google/gemini-cli-core',
+    '@zartosht/agent-cli-core',
   )) as Record<string, unknown>;
   return {
     ...actualServerModule,
@@ -49,7 +49,7 @@ interface MockConfigInstanceShape {
   getFullContext: Mock<() => boolean>;
   getUserAgent: Mock<() => string>;
   getUserMemory: Mock<() => string>;
-  getGeminiMdFileCount: Mock<() => number>;
+  getAgentMdFileCount: Mock<() => number>;
   getToolRegistry: Mock<() => { discoverTools: Mock<() => void> }>;
 }
 
@@ -98,7 +98,7 @@ describe('useAutoAcceptIndicator', () => {
           () => string
         >,
         getUserMemory: vi.fn().mockReturnValue('') as Mock<() => string>,
-        getGeminiMdFileCount: vi.fn().mockReturnValue(0) as Mock<() => number>,
+        getAgentMdFileCount: vi.fn().mockReturnValue(0) as Mock<() => number>,
         getToolRegistry: vi
           .fn()
           .mockReturnValue({ discoverTools: vi.fn() }) as Mock<

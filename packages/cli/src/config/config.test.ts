@@ -9,7 +9,7 @@ import * as os from 'os';
 import { loadCliConfig } from './config.js';
 import { Settings } from './settings.js';
 import { Extension } from './extension.js';
-import * as ServerConfig from '@google/gemini-cli-core';
+import * as ServerConfig from '@zartosht/agent-cli-core';
 
 vi.mock('os', async (importOriginal) => {
   const actualOs = await importOriginal<typeof os>();
@@ -29,9 +29,9 @@ vi.mock('read-package-up', () => ({
   ),
 }));
 
-vi.mock('@google/gemini-cli-core', async () => {
+vi.mock('@zartosht/agent-cli-core', async () => {
   const actualServer = await vi.importActual<typeof ServerConfig>(
-    '@google/gemini-cli-core',
+    '@zartosht/agent-cli-core',
   );
   return {
     ...actualServer,
@@ -53,7 +53,7 @@ describe('loadCliConfig', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(os.homedir).mockReturnValue('/mock/home/user');
-    process.env.GEMINI_API_KEY = 'test-api-key'; // Ensure API key is set for tests
+    process.env.AGENT_API_KEY = 'test-api-key'; // Ensure API key is set for tests
   });
 
   afterEach(() => {
@@ -98,7 +98,7 @@ describe('loadCliConfig telemetry', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(os.homedir).mockReturnValue('/mock/home/user');
-    process.env.GEMINI_API_KEY = 'test-api-key';
+    process.env.AGENT_API_KEY = 'test-api-key';
   });
 
   afterEach(() => {
@@ -266,7 +266,7 @@ describe('Hierarchical Memory Loading (config.ts) - Placeholder Suite', () => {
           name: 'ext1',
           version: '1.0.0',
         },
-        contextFiles: ['/path/to/ext1/GEMINI.md'],
+        contextFiles: ['/path/to/ext1/AGENT.md'],
       },
       {
         config: {
@@ -292,7 +292,7 @@ describe('Hierarchical Memory Loading (config.ts) - Placeholder Suite', () => {
       false,
       expect.any(Object),
       [
-        '/path/to/ext1/GEMINI.md',
+        '/path/to/ext1/AGENT.md',
         '/path/to/ext3/context1.md',
         '/path/to/ext3/context2.md',
       ],
@@ -300,7 +300,7 @@ describe('Hierarchical Memory Loading (config.ts) - Placeholder Suite', () => {
   });
 
   // NOTE TO FUTURE DEVELOPERS:
-  // To re-enable tests for loadHierarchicalGeminiMemory, ensure that:
+  // To re-enable tests for loadHierarchicalAgentMemory, ensure that:
   // 1. os.homedir() is reliably mocked *before* the config.ts module is loaded
   //    and its functions (which use os.homedir()) are called.
   // 2. fs/promises and fs mocks correctly simulate file/directory existence,
@@ -309,12 +309,12 @@ describe('Hierarchical Memory Loading (config.ts) - Placeholder Suite', () => {
   // Example of a previously failing test structure:
   /*
   it('should correctly use mocked homedir for global path', async () => {
-    const MOCK_GEMINI_DIR_LOCAL = path.join('/mock/home/user', '.gemini');
-    const MOCK_GLOBAL_PATH_LOCAL = path.join(MOCK_GEMINI_DIR_LOCAL, 'GEMINI.md');
+    const MOCK_AGENT_DIR_LOCAL = path.join('/mock/home/user', '.agent');
+    const MOCK_GLOBAL_PATH_LOCAL = path.join(MOCK_AGENT_DIR_LOCAL, 'AGENT.md');
     mockFs({
       [MOCK_GLOBAL_PATH_LOCAL]: { type: 'file', content: 'GlobalContentOnly' }
     });
-    const memory = await loadHierarchicalGeminiMemory("/some/other/cwd", false);
+    const memory = await loadHierarchicalAgentMemory("/some/other/cwd", false);
     expect(memory).toBe('GlobalContentOnly');
     expect(vi.mocked(os.homedir)).toHaveBeenCalled();
     expect(fsPromises.readFile).toHaveBeenCalledWith(MOCK_GLOBAL_PATH_LOCAL, 'utf-8');

@@ -7,7 +7,7 @@
 import { render } from 'ink-testing-library';
 import { describe, it, expect, vi } from 'vitest';
 import { ToolConfirmationMessage } from './ToolConfirmationMessage.js';
-import { ToolCallConfirmationDetails } from '@google/gemini-cli-core';
+import { ToolCallConfirmationDetails } from '@zartosht/agent-cli-core';
 
 describe('ToolConfirmationMessage', () => {
   it('should not display urls if prompt and url are the same', () => {
@@ -35,9 +35,9 @@ describe('ToolConfirmationMessage', () => {
       type: 'info',
       title: 'Confirm Web Fetch',
       prompt:
-        'fetch https://github.com/google/gemini-react/blob/main/README.md',
+        'fetch https://github.com/google/agent-react/blob/main/README.md',
       urls: [
-        'https://raw.githubusercontent.com/google/gemini-react/main/README.md',
+        'https://raw.githubusercontent.com/google/agent-react/main/README.md',
       ],
       onConfirm: vi.fn(),
     };
@@ -52,7 +52,7 @@ describe('ToolConfirmationMessage', () => {
 
     expect(lastFrame()).toContain('URLs to fetch:');
     expect(lastFrame()).toContain(
-      '- https://raw.githubusercontent.com/google/gemini-react/main/README.md',
+      '- https://raw.githubusercontent.com/google/agent-react/main/README.md',
     );
   });
 });

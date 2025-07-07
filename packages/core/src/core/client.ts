@@ -17,8 +17,8 @@ import {
 import { getFolderStructure } from '../utils/getFolderStructure.js';
 import {
   Turn,
-  ServerGeminiStreamEvent,
-  GeminiEventType,
+  ServerAgentStreamEvent,
+  AgentEventType,
   ChatCompressionInfo,
 } from './turn.js';
 import { Config } from '../config/config.js';
@@ -27,7 +27,7 @@ import { ReadManyFilesTool } from '../tools/read-many-files.js';
 import { getResponseText } from '../utils/generateContentResponseUtilities.js';
 import { checkNextSpeaker } from '../utils/nextSpeakerChecker.js';
 import { reportError } from '../utils/errorReporting.js';
-import { GeminiChat } from './geminiChat.js';
+import { AgentChat } from './agentChat.js';
 import { retryWithBackoff } from '../utils/retry.js';
 import { getErrorMessage } from '../utils/errors.js';
 import { tokenLimit } from './tokenLimits.js';
@@ -38,15 +38,15 @@ import {
   createContentGenerator,
 } from './contentGenerator.js';
 import { ProxyAgent, setGlobalDispatcher } from 'undici';
-import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
+import { DEFAULT_AGENT_FLASH_MODEL } from '../config/models.js';
 
 function isThinkingSupported(model: string) {
-  if (model.startsWith('gemini-2.5')) return true;
+  if (model.startsWith('agent-2.5')) return true;
   return false;
 }
 
-export class GeminiClient {
-  private chat?: GeminiChat;
+export class AgentClient {
+  private chat?: AgentChat;
   private contentGenerator?: ContentGenerator;
   private embeddingModel: string;
   private generateContentConfig: GenerateContentConfig = {
@@ -83,7 +83,7 @@ export class GeminiClient {
     this.getChat().addHistory(content);
   }
 
-  getChat(): GeminiChat {
+  getChat(): AgentChat {
     if (!this.chat) {
       throw new Error('Chat not initialized');
     }
@@ -115,7 +115,7 @@ export class GeminiClient {
       fileService: this.config.getFileService(),
     });
     const context = `
-  This is the Gemini CLI. We are setting up the context for our chat.
+  This is the Agent CLI. We are setting up the context for our chat.
   Today's date is ${today}.
   My operating system is: ${platform}
   I'm currently working in the directory: ${cwd}
@@ -166,7 +166,7 @@ export class GeminiClient {
     return initialParts;
   }
 
-  private async startChat(extraHistory?: Content[]): Promise<GeminiChat> {
+  private async startChat(extraHistory?: Content[]): Promise<AgentChat> {
     const envParts = await this.getEnvironment();
     const toolRegistry = await this.config.getToolRegistry();
     const toolDeclarations = toolRegistry.getFunctionDeclarations();
@@ -195,7 +195,7 @@ export class GeminiClient {
             },
           }
         : this.generateContentConfig;
-      return new GeminiChat(
+      return new AgentChat(
         this.config,
         this.getContentGenerator(),
         {
@@ -208,7 +208,7 @@ export class GeminiClient {
     } catch (error) {
       await reportError(
         error,
-        'Error initializing Gemini chat session.',
+        'Error initializing Agent chat session.',
         history,
         'startChat',
       );
@@ -220,7 +220,7 @@ export class GeminiClient {
     request: PartListUnion,
     signal: AbortSignal,
     turns: number = this.MAX_TURNS,
-  ): AsyncGenerator<ServerGeminiStreamEvent, Turn> {
+  ): AsyncGenerator<ServerAgentStreamEvent, Turn> {
     // Ensure turns never exceeds MAX_TURNS to prevent infinite loops
     const boundedTurns = Math.min(turns, this.MAX_TURNS);
     if (!boundedTurns) {
@@ -229,7 +229,7 @@ export class GeminiClient {
 
     const compressed = await this.tryCompressChat();
     if (compressed) {
-      yield { type: GeminiEventType.ChatCompressed, value: compressed };
+      yield { type: AgentEventType.ChatCompressed, value: compressed };
     }
     const turn = new Turn(this.getChat());
     const resultStream = turn.run(request, signal);
@@ -256,7 +256,7 @@ export class GeminiClient {
     contents: Content[],
     schema: SchemaUnion,
     abortSignal: AbortSignal,
-    model: string = DEFAULT_GEMINI_FLASH_MODEL,
+    model: string = DEFAULT_AGENT_FLASH_MODEL,
     config: GenerateContentConfig = {},
   ): Promise<Record<string, unknown>> {
     try {
@@ -507,7 +507,7 @@ export class GeminiClient {
     }
 
     const currentModel = this.config.getModel();
-    const fallbackModel = DEFAULT_GEMINI_FLASH_MODEL;
+    const fallbackModel = DEFAULT_AGENT_FLASH_MODEL;
 
     // Don't fallback if already using Flash model
     if (currentModel === fallbackModel) {

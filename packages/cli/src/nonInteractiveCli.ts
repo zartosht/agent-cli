@@ -11,17 +11,12 @@ import {
   ToolRegistry,
   shutdownTelemetry,
   isTelemetrySdkInitialized,
-} from '@google/gemini-cli-core';
-import {
-  Content,
-  Part,
-  FunctionCall,
-  GenerateContentResponse,
-} from '@google/genai';
+} from '@zartosht/agent-cli-core';
 
 import { parseAndFormatApiError } from './ui/utils/errorParsing.js';
 
-function getResponseText(response: GenerateContentResponse): string | null {
+// GenerateContentResponse
+function getResponseText(response: any): string | null {
   if (response.candidates && response.candidates.length > 0) {
     const candidate = response.candidates[0];
     if (
@@ -55,10 +50,10 @@ export async function runNonInteractive(
     }
   });
 
-  const geminiClient = config.getGeminiClient();
+  const agentClient = config.getAgentClient();
   const toolRegistry: ToolRegistry = await config.getToolRegistry();
 
-  const chat = await geminiClient.getChat();
+  const chat = await agentClient.getChat();
   const abortController = new AbortController();
   let currentMessages: Content[] = [{ role: 'user', parts: [{ text: input }] }];
 

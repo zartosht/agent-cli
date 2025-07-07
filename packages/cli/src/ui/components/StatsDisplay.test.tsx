@@ -60,7 +60,7 @@ describe('<StatsDisplay />', () => {
   it('renders a table with two models correctly', () => {
     const metrics: SessionMetrics = {
       models: {
-        'gemini-2.5-pro': {
+        'agent-2.5-pro': {
           api: { totalRequests: 3, totalErrors: 0, totalLatencyMs: 15000 },
           tokens: {
             prompt: 1000,
@@ -71,7 +71,7 @@ describe('<StatsDisplay />', () => {
             tool: 50,
           },
         },
-        'gemini-2.5-flash': {
+        'agent-2.5-flash': {
           api: { totalRequests: 5, totalErrors: 1, totalLatencyMs: 4500 },
           tokens: {
             prompt: 25000,
@@ -96,8 +96,8 @@ describe('<StatsDisplay />', () => {
     const { lastFrame } = renderWithMockedStats(metrics);
     const output = lastFrame();
 
-    expect(output).toContain('gemini-2.5-pro');
-    expect(output).toContain('gemini-2.5-flash');
+    expect(output).toContain('agent-2.5-pro');
+    expect(output).toContain('agent-2.5-flash');
     expect(output).toContain('1,000');
     expect(output).toContain('25,000');
     expect(output).toMatchSnapshot();
@@ -106,7 +106,7 @@ describe('<StatsDisplay />', () => {
   it('renders all sections when all data is present', () => {
     const metrics: SessionMetrics = {
       models: {
-        'gemini-2.5-pro': {
+        'agent-2.5-pro': {
           api: { totalRequests: 1, totalErrors: 0, totalLatencyMs: 100 },
           tokens: {
             prompt: 100,
@@ -143,7 +143,7 @@ describe('<StatsDisplay />', () => {
     expect(output).toContain('Interaction Summary');
     expect(output).toContain('User Agreement');
     expect(output).toContain('Savings Highlight');
-    expect(output).toContain('gemini-2.5-pro');
+    expect(output).toContain('agent-2.5-pro');
     expect(output).toMatchSnapshot();
   });
 
@@ -181,7 +181,7 @@ describe('<StatsDisplay />', () => {
     it('hides Efficiency section when cache is not used', () => {
       const metrics: SessionMetrics = {
         models: {
-          'gemini-2.5-pro': {
+          'agent-2.5-pro': {
             api: { totalRequests: 1, totalErrors: 0, totalLatencyMs: 100 },
             tokens: {
               prompt: 100,

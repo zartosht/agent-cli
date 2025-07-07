@@ -9,7 +9,7 @@ import { SchemaValidator } from '../utils/schemaValidator.js';
 import { getErrorMessage } from '../utils/errors.js';
 import * as path from 'path';
 import { glob } from 'glob';
-import { getCurrentGeminiMdFilename } from './memoryTool.js';
+import { getCurrentAgentMdFilename } from './memoryTool.js';
 import {
   detectFileType,
   processSingleFileContent,
@@ -109,7 +109,7 @@ const DEFAULT_EXCLUDES: string[] = [
   '**/*.odp',
   '**/*.DS_Store',
   '**/.env',
-  `**/${getCurrentGeminiMdFilename()}`,
+  `**/${getCurrentAgentMdFilename()}`,
 ];
 
 const DEFAULT_OUTPUT_SEPARATOR_FORMAT = '--- {filePath} ---';
@@ -124,7 +124,7 @@ export class ReadManyFilesTool extends BaseTool<
   ToolResult
 > {
   static readonly Name: string = 'read_many_files';
-  private readonly geminiIgnorePatterns: string[] = [];
+  private readonly agentIgnorePatterns: string[] = [];
 
   /**
    * Creates an instance of ReadManyFilesTool.
@@ -196,9 +196,9 @@ Use this tool when the user's query implies needing the content of several files
       parameterSchema,
     );
     this.targetDir = path.resolve(targetDir);
-    this.geminiIgnorePatterns = config
+    this.agentIgnorePatterns = config
       .getFileService()
-      .getGeminiIgnorePatterns();
+      .getAgentIgnorePatterns();
   }
 
   validateParams(params: ReadManyFilesParams): string | null {
@@ -257,18 +257,18 @@ Use this tool when the user's query implies needing the content of several files
 
     const finalExclusionPatternsForDescription: string[] =
       paramUseDefaultExcludes
-        ? [...DEFAULT_EXCLUDES, ...paramExcludes, ...this.geminiIgnorePatterns]
-        : [...paramExcludes, ...this.geminiIgnorePatterns];
+        ? [...DEFAULT_EXCLUDES, ...paramExcludes, ...this.agentIgnorePatterns]
+        : [...paramExcludes, ...this.agentIgnorePatterns];
 
     let excludeDesc = `Excluding: ${finalExclusionPatternsForDescription.length > 0 ? `patterns like \`${finalExclusionPatternsForDescription.slice(0, 2).join('`, `')}${finalExclusionPatternsForDescription.length > 2 ? '...`' : '`'}` : 'none specified'}`;
 
-    // Add a note if .geminiignore patterns contributed to the final list of exclusions
-    if (this.geminiIgnorePatterns.length > 0) {
-      const geminiPatternsInEffect = this.geminiIgnorePatterns.filter((p) =>
+    // Add a note if .agentignore patterns contributed to the final list of exclusions
+    if (this.agentIgnorePatterns.length > 0) {
+      const agentPatternsInEffect = this.agentIgnorePatterns.filter((p) =>
         finalExclusionPatternsForDescription.includes(p),
       ).length;
-      if (geminiPatternsInEffect > 0) {
-        excludeDesc += ` (includes ${geminiPatternsInEffect} from .geminiignore)`;
+      if (agentPatternsInEffect > 0) {
+        excludeDesc += ` (includes ${agentPatternsInEffect} from .agentignore)`;
       }
     }
 
@@ -308,8 +308,8 @@ Use this tool when the user's query implies needing the content of several files
     const contentParts: PartListUnion = [];
 
     const effectiveExcludes = useDefaultExcludes
-      ? [...DEFAULT_EXCLUDES, ...exclude, ...this.geminiIgnorePatterns]
-      : [...exclude, ...this.geminiIgnorePatterns];
+      ? [...DEFAULT_EXCLUDES, ...exclude, ...this.agentIgnorePatterns]
+      : [...exclude, ...this.agentIgnorePatterns];
 
     const searchPatterns = [...inputPatterns, ...include];
     if (searchPatterns.length === 0) {

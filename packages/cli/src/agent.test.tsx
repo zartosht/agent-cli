@@ -6,7 +6,7 @@
 
 import stripAnsi from 'strip-ansi';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { main } from './gemini.js';
+import { main } from './agent.js';
 import {
   LoadedSettings,
   SettingsFile,
@@ -60,10 +60,10 @@ vi.mock('./utils/sandbox.js', () => ({
   start_sandbox: vi.fn(() => Promise.resolve()), // Mock as an async function that resolves
 }));
 
-describe('gemini.tsx main function', () => {
+describe('agent.tsx main function', () => {
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
   let loadSettingsMock: ReturnType<typeof vi.mocked<typeof loadSettings>>;
-  let originalEnvGeminiSandbox: string | undefined;
+  let originalEnvAgentSandbox: string | undefined;
   let originalEnvSandbox: string | undefined;
 
   const processExitSpy = vi
@@ -76,9 +76,9 @@ describe('gemini.tsx main function', () => {
     loadSettingsMock = vi.mocked(loadSettings);
 
     // Store and clear sandbox-related env variables to ensure a consistent test environment
-    originalEnvGeminiSandbox = process.env.GEMINI_SANDBOX;
+    originalEnvAgentSandbox = process.env.AGENT_SANDBOX;
     originalEnvSandbox = process.env.SANDBOX;
-    delete process.env.GEMINI_SANDBOX;
+    delete process.env.AGENT_SANDBOX;
     delete process.env.SANDBOX;
 
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -86,10 +86,10 @@ describe('gemini.tsx main function', () => {
 
   afterEach(() => {
     // Restore original env variables
-    if (originalEnvGeminiSandbox !== undefined) {
-      process.env.GEMINI_SANDBOX = originalEnvGeminiSandbox;
+    if (originalEnvAgentSandbox !== undefined) {
+      process.env.AGENT_SANDBOX = originalEnvAgentSandbox;
     } else {
-      delete process.env.GEMINI_SANDBOX;
+      delete process.env.AGENT_SANDBOX;
     }
     if (originalEnvSandbox !== undefined) {
       process.env.SANDBOX = originalEnvSandbox;
@@ -109,7 +109,7 @@ describe('gemini.tsx main function', () => {
       settings: {},
     };
     const workspaceSettingsFile: SettingsFile = {
-      path: '/workspace/.gemini/settings.json',
+      path: '/workspace/.agent/settings.json',
       settings: {},
     };
     const mockLoadedSettings = new LoadedSettings(

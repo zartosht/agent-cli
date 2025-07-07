@@ -91,20 +91,20 @@ describe('Telemetry Metrics', () => {
     } as unknown as Config;
 
     it('should not record metrics if not initialized', () => {
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-pro', 100, 'input');
+      recordTokenUsageMetricsModule(mockConfig, 'agent-pro', 100, 'input');
       expect(mockCounterAddFn).not.toHaveBeenCalled();
     });
 
     it('should record token usage with the correct attributes', () => {
       initializeMetricsModule(mockConfig);
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-pro', 100, 'input');
+      recordTokenUsageMetricsModule(mockConfig, 'agent-pro', 100, 'input');
       expect(mockCounterAddFn).toHaveBeenCalledTimes(2);
       expect(mockCounterAddFn).toHaveBeenNthCalledWith(1, 1, {
         'session.id': 'test-session-id',
       });
       expect(mockCounterAddFn).toHaveBeenNthCalledWith(2, 100, {
         'session.id': 'test-session-id',
-        model: 'gemini-pro',
+        model: 'agent-pro',
         type: 'input',
       });
     });
@@ -113,31 +113,31 @@ describe('Telemetry Metrics', () => {
       initializeMetricsModule(mockConfig);
       mockCounterAddFn.mockClear();
 
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-pro', 50, 'output');
+      recordTokenUsageMetricsModule(mockConfig, 'agent-pro', 50, 'output');
       expect(mockCounterAddFn).toHaveBeenCalledWith(50, {
         'session.id': 'test-session-id',
-        model: 'gemini-pro',
+        model: 'agent-pro',
         type: 'output',
       });
 
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-pro', 25, 'thought');
+      recordTokenUsageMetricsModule(mockConfig, 'agent-pro', 25, 'thought');
       expect(mockCounterAddFn).toHaveBeenCalledWith(25, {
         'session.id': 'test-session-id',
-        model: 'gemini-pro',
+        model: 'agent-pro',
         type: 'thought',
       });
 
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-pro', 75, 'cache');
+      recordTokenUsageMetricsModule(mockConfig, 'agent-pro', 75, 'cache');
       expect(mockCounterAddFn).toHaveBeenCalledWith(75, {
         'session.id': 'test-session-id',
-        model: 'gemini-pro',
+        model: 'agent-pro',
         type: 'cache',
       });
 
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-pro', 125, 'tool');
+      recordTokenUsageMetricsModule(mockConfig, 'agent-pro', 125, 'tool');
       expect(mockCounterAddFn).toHaveBeenCalledWith(125, {
         'session.id': 'test-session-id',
-        model: 'gemini-pro',
+        model: 'agent-pro',
         type: 'tool',
       });
     });
@@ -146,10 +146,10 @@ describe('Telemetry Metrics', () => {
       initializeMetricsModule(mockConfig);
       mockCounterAddFn.mockClear();
 
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-ultra', 200, 'input');
+      recordTokenUsageMetricsModule(mockConfig, 'agent-ultra', 200, 'input');
       expect(mockCounterAddFn).toHaveBeenCalledWith(200, {
         'session.id': 'test-session-id',
-        model: 'gemini-ultra',
+        model: 'agent-ultra',
         type: 'input',
       });
     });

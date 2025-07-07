@@ -6,8 +6,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import './src/gemini.js';
-import { main } from './src/gemini.js';
+import './src/agent.js';
+import { main } from './src/agent.js';
 
 // --- Global Entry Point ---
 main().catch((error) => {

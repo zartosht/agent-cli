@@ -35,7 +35,7 @@ describe('oauth2', () => {
 
   beforeEach(() => {
     tempHomeDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), 'gemini-cli-test-home-'),
+      path.join(os.tmpdir(), 'agent-cli-test-home-'),
     );
     vi.mocked(os.homedir).mockReturnValue(tempHomeDir);
   });
@@ -159,7 +159,7 @@ describe('oauth2', () => {
     // Verify Google Account ID was cached
     const googleAccountIdPath = path.join(
       tempHomeDir,
-      '.gemini',
+      '.agent',
       'google_account_id',
     );
     expect(fs.existsSync(googleAccountIdPath)).toBe(true);

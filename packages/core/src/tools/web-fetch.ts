@@ -119,7 +119,7 @@ export class WebFetchTool extends BaseTool<WebFetchToolParams, ToolResult> {
         ],
       }).substring(0, MAX_CONTENT_LENGTH);
 
-      const geminiClient = this.config.getGeminiClient();
+      const agentClient = this.config.getAgentClient();
       const fallbackPrompt = `The user requested the following: "${params.prompt}".
 
 I was unable to access the URL directly. Instead, I have fetched the raw content of the page. Please use the following content to answer the user's request. Do not attempt to access the URL again.
@@ -127,7 +127,7 @@ I was unable to access the URL directly. Instead, I have fetched the raw content
 ---
 ${textContent}
 ---`;
-      const result = await geminiClient.generateContent(
+      const result = await agentClient.generateContent(
         [{ role: 'user', parts: [{ text: fallbackPrompt }] }],
         {},
         signal,
@@ -235,10 +235,10 @@ ${textContent}
       return this.executeFallback(params, signal);
     }
 
-    const geminiClient = this.config.getGeminiClient();
+    const agentClient = this.config.getAgentClient();
 
     try {
-      const response = await geminiClient.generateContent(
+      const response = await agentClient.generateContent(
         [{ role: 'user', parts: [{ text: userPrompt }] }],
         { tools: [{ urlContext: {} }] },
         signal, // Pass signal

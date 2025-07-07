@@ -7,13 +7,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   Turn,
-  GeminiEventType,
-  ServerGeminiToolCallRequestEvent,
-  ServerGeminiErrorEvent,
+  AgentEventType,
+  ServerAgentToolCallRequestEvent,
+  ServerAgentErrorEvent,
 } from './turn.js';
 import { GenerateContentResponse, Part, Content } from '@google/genai';
 import { reportError } from '../utils/errorReporting.js';
-import { GeminiChat } from './geminiChat.js';
+import { AgentChat } from './agentChat.js';
 
 const mockSendMessageStream = vi.fn();
 const mockGetHistory = vi.fn();
@@ -55,7 +55,7 @@ describe('Turn', () => {
       sendMessageStream: mockSendMessageStream,
       getHistory: mockGetHistory,
     };
-    turn = new Turn(mockChatInstance as unknown as GeminiChat);
+    turn = new Turn(mockChatInstance as unknown as AgentChat);
     mockGetHistory.mockReturnValue([]);
     mockSendMessageStream.mockResolvedValue((async function* () {})());
   });
@@ -98,8 +98,8 @@ describe('Turn', () => {
       });
 
       expect(events).toEqual([
-        { type: GeminiEventType.Content, value: 'Hello' },
-        { type: GeminiEventType.Content, value: ' world' },
+        { type: AgentEventType.Content, value: 'Hello' },
+        { type: AgentEventType.Content, value: ' world' },
       ]);
       expect(turn.getDebugResponses().length).toBe(2);
     });
@@ -130,8 +130,8 @@ describe('Turn', () => {
       }
 
       expect(events.length).toBe(2);
-      const event1 = events[0] as ServerGeminiToolCallRequestEvent;
-      expect(event1.type).toBe(GeminiEventType.ToolCallRequest);
+      const event1 = events[0] as ServerAgentToolCallRequestEvent;
+      expect(event1.type).toBe(AgentEventType.ToolCallRequest);
       expect(event1.value).toEqual(
         expect.objectContaining({
           callId: 'fc1',
@@ -142,8 +142,8 @@ describe('Turn', () => {
       );
       expect(turn.pendingToolCalls[0]).toEqual(event1.value);
 
-      const event2 = events[1] as ServerGeminiToolCallRequestEvent;
-      expect(event2.type).toBe(GeminiEventType.ToolCallRequest);
+      const event2 = events[1] as ServerAgentToolCallRequestEvent;
+      expect(event2.type).toBe(AgentEventType.ToolCallRequest);
       expect(event2.value).toEqual(
         expect.objectContaining({
           name: 'tool2',
@@ -183,8 +183,8 @@ describe('Turn', () => {
         events.push(event);
       }
       expect(events).toEqual([
-        { type: GeminiEventType.Content, value: 'First part' },
-        { type: GeminiEventType.UserCancelled },
+        { type: AgentEventType.Content, value: 'First part' },
+        { type: AgentEventType.UserCancelled },
       ]);
       expect(turn.getDebugResponses().length).toBe(1);
     });
@@ -207,15 +207,15 @@ describe('Turn', () => {
       }
 
       expect(events.length).toBe(1);
-      const errorEvent = events[0] as ServerGeminiErrorEvent;
-      expect(errorEvent.type).toBe(GeminiEventType.Error);
+      const errorEvent = events[0] as ServerAgentErrorEvent;
+      expect(errorEvent.type).toBe(AgentEventType.Error);
       expect(errorEvent.value).toEqual({
         error: { message: 'API Error', status: undefined },
       });
       expect(turn.getDebugResponses().length).toBe(0);
       expect(reportError).toHaveBeenCalledWith(
         error,
-        'Error when talking to Gemini API',
+        'Error when talking to Agent API',
         [...historyContent, reqParts],
         'Turn.run-sendMessageStream',
       );
@@ -242,8 +242,8 @@ describe('Turn', () => {
       }
 
       expect(events.length).toBe(3);
-      const event1 = events[0] as ServerGeminiToolCallRequestEvent;
-      expect(event1.type).toBe(GeminiEventType.ToolCallRequest);
+      const event1 = events[0] as ServerAgentToolCallRequestEvent;
+      expect(event1.type).toBe(AgentEventType.ToolCallRequest);
       expect(event1.value).toEqual(
         expect.objectContaining({
           callId: 'fc1',
@@ -254,8 +254,8 @@ describe('Turn', () => {
       );
       expect(turn.pendingToolCalls[0]).toEqual(event1.value);
 
-      const event2 = events[1] as ServerGeminiToolCallRequestEvent;
-      expect(event2.type).toBe(GeminiEventType.ToolCallRequest);
+      const event2 = events[1] as ServerAgentToolCallRequestEvent;
+      expect(event2.type).toBe(AgentEventType.ToolCallRequest);
       expect(event2.value).toEqual(
         expect.objectContaining({
           callId: 'fc2',
@@ -266,8 +266,8 @@ describe('Turn', () => {
       );
       expect(turn.pendingToolCalls[1]).toEqual(event2.value);
 
-      const event3 = events[2] as ServerGeminiToolCallRequestEvent;
-      expect(event3.type).toBe(GeminiEventType.ToolCallRequest);
+      const event3 = events[2] as ServerAgentToolCallRequestEvent;
+      expect(event3.type).toBe(AgentEventType.ToolCallRequest);
       expect(event3.value).toEqual(
         expect.objectContaining({
           callId: 'fc3',

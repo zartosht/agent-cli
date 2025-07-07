@@ -10,7 +10,7 @@ import {
   ContentGeneratorConfig,
   EditTool,
   ErroredToolCall,
-  GeminiClient,
+  AgentClient,
   ToolConfirmationOutcome,
   ToolRegistry,
 } from '../index.js';
@@ -333,7 +333,7 @@ describe('loggers', () => {
     const cfg1 = {
       getSessionId: () => 'test-session-id',
       getTargetDir: () => 'target-dir',
-      getGeminiClient: () => mockGeminiClient,
+      getAgentClient: () => mockAgentClient,
     } as Config;
     const cfg2 = {
       getSessionId: () => 'test-session-id',
@@ -362,11 +362,11 @@ describe('loggers', () => {
       getUserMemory: () => 'user-memory',
     } as unknown as Config;
 
-    const mockGeminiClient = new GeminiClient(cfg2);
+    const mockAgentClient = new AgentClient(cfg2);
     const mockConfig = {
       getSessionId: () => 'test-session-id',
       getTargetDir: () => 'target-dir',
-      getGeminiClient: () => mockGeminiClient,
+      getAgentClient: () => mockAgentClient,
       getUsageStatisticsEnabled: () => true,
       getTelemetryEnabled: () => true,
       getTelemetryLogPromptsEnabled: () => true,

@@ -14,7 +14,7 @@ import {
   SessionMetrics,
 } from './SessionContext.js';
 import { describe, it, expect, vi } from 'vitest';
-import { uiTelemetryService } from '@google/gemini-cli-core';
+import { uiTelemetryService } from '@zartosht/agent-cli-core';
 
 /**
  * A test harness component that uses the hook and exposes the context value
@@ -62,7 +62,7 @@ describe('SessionStatsContext', () => {
 
     const newMetrics: SessionMetrics = {
       models: {
-        'gemini-pro': {
+        'agent-pro': {
           api: {
             totalRequests: 1,
             totalErrors: 0,

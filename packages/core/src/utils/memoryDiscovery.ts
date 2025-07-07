@@ -10,8 +10,8 @@ import * as path from 'path';
 import { homedir } from 'os';
 import { bfsFileSearch } from './bfsFileSearch.js';
 import {
-  GEMINI_CONFIG_DIR,
-  getAllGeminiMdFilenames,
+  AGENT_CONFIG_DIR,
+  getAllAgentMdFilenames,
 } from '../tools/memoryTool.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { processImports } from './memoryImportProcessor.js';
@@ -31,7 +31,7 @@ const logger = {
 
 const MAX_DIRECTORIES_TO_SCAN_FOR_MEMORY = 200;
 
-interface GeminiFileContent {
+interface AgentFileContent {
   filePath: string;
   content: string | null;
 }
@@ -79,7 +79,7 @@ async function findProjectRoot(startDir: string): Promise<string | null> {
   }
 }
 
-async function getGeminiMdFilePathsInternal(
+async function getAgentMdFilePathsInternal(
   currentWorkingDirectory: string,
   userHomePath: string,
   debugMode: boolean,
@@ -87,20 +87,20 @@ async function getGeminiMdFilePathsInternal(
   extensionContextFilePaths: string[] = [],
 ): Promise<string[]> {
   const allPaths = new Set<string>();
-  const geminiMdFilenames = getAllGeminiMdFilenames();
+  const agentMdFilenames = getAllAgentMdFilenames();
 
-  for (const geminiMdFilename of geminiMdFilenames) {
+  for (const agentMdFilename of agentMdFilenames) {
     const resolvedCwd = path.resolve(currentWorkingDirectory);
     const resolvedHome = path.resolve(userHomePath);
     const globalMemoryPath = path.join(
       resolvedHome,
-      GEMINI_CONFIG_DIR,
-      geminiMdFilename,
+      AGENT_CONFIG_DIR,
+      agentMdFilename,
     );
 
     if (debugMode)
       logger.debug(
-        `Searching for ${geminiMdFilename} starting from CWD: ${resolvedCwd}`,
+        `Searching for ${agentMdFilename} starting from CWD: ${resolvedCwd}`,
       );
     if (debugMode) logger.debug(`User home directory: ${resolvedHome}`);
 
@@ -109,12 +109,12 @@ async function getGeminiMdFilePathsInternal(
       allPaths.add(globalMemoryPath);
       if (debugMode)
         logger.debug(
-          `Found readable global ${geminiMdFilename}: ${globalMemoryPath}`,
+          `Found readable global ${agentMdFilename}: ${globalMemoryPath}`,
         );
     } catch {
       if (debugMode)
         logger.debug(
-          `Global ${geminiMdFilename} not found or not readable: ${globalMemoryPath}`,
+          `Global ${agentMdFilename} not found or not readable: ${globalMemoryPath}`,
         );
     }
 
@@ -133,13 +133,13 @@ async function getGeminiMdFilePathsInternal(
       // Loop until filesystem root or currentDir is empty
       if (debugMode) {
         logger.debug(
-          `Checking for ${geminiMdFilename} in (upward scan): ${currentDir}`,
+          `Checking for ${agentMdFilename} in (upward scan): ${currentDir}`,
         );
       }
 
-      // Skip the global .gemini directory itself during upward scan from CWD,
+      // Skip the global .agent directory itself during upward scan from CWD,
       // as global is handled separately and explicitly first.
-      if (currentDir === path.join(resolvedHome, GEMINI_CONFIG_DIR)) {
+      if (currentDir === path.join(resolvedHome, AGENT_CONFIG_DIR)) {
         if (debugMode) {
           logger.debug(
             `Upward scan reached global config dir path, stopping upward search here: ${currentDir}`,
@@ -148,7 +148,7 @@ async function getGeminiMdFilePathsInternal(
         break;
       }
 
-      const potentialPath = path.join(currentDir, geminiMdFilename);
+      const potentialPath = path.join(currentDir, agentMdFilename);
       try {
         await fs.access(potentialPath, fsSync.constants.R_OK);
         // Add to upwardPaths only if it's not the already added globalMemoryPath
@@ -156,14 +156,14 @@ async function getGeminiMdFilePathsInternal(
           upwardPaths.unshift(potentialPath);
           if (debugMode) {
             logger.debug(
-              `Found readable upward ${geminiMdFilename}: ${potentialPath}`,
+              `Found readable upward ${agentMdFilename}: ${potentialPath}`,
             );
           }
         }
       } catch {
         if (debugMode) {
           logger.debug(
-            `Upward ${geminiMdFilename} not found or not readable in: ${currentDir}`,
+            `Upward ${agentMdFilename} not found or not readable in: ${currentDir}`,
           );
         }
       }
@@ -182,7 +182,7 @@ async function getGeminiMdFilePathsInternal(
     upwardPaths.forEach((p) => allPaths.add(p));
 
     const downwardPaths = await bfsFileSearch(resolvedCwd, {
-      fileName: geminiMdFilename,
+      fileName: agentMdFilename,
       maxDirs: MAX_DIRECTORIES_TO_SCAN_FOR_MEMORY,
       debug: debugMode,
       fileService,
@@ -190,7 +190,7 @@ async function getGeminiMdFilePathsInternal(
     downwardPaths.sort(); // Sort for consistent ordering, though hierarchy might be more complex
     if (debugMode && downwardPaths.length > 0)
       logger.debug(
-        `Found downward ${geminiMdFilename} files (sorted): ${JSON.stringify(
+        `Found downward ${agentMdFilename} files (sorted): ${JSON.stringify(
           downwardPaths,
         )}`,
       );
@@ -209,18 +209,18 @@ async function getGeminiMdFilePathsInternal(
 
   if (debugMode)
     logger.debug(
-      `Final ordered ${getAllGeminiMdFilenames()} paths to read: ${JSON.stringify(
+      `Final ordered ${getAllAgentMdFilenames()} paths to read: ${JSON.stringify(
         finalPaths,
       )}`,
     );
   return finalPaths;
 }
 
-async function readGeminiMdFiles(
+async function readAgentMdFiles(
   filePaths: string[],
   debugMode: boolean,
-): Promise<GeminiFileContent[]> {
-  const results: GeminiFileContent[] = [];
+): Promise<AgentFileContent[]> {
+  const results: AgentFileContent[] = [];
   for (const filePath of filePaths) {
     try {
       const content = await fs.readFile(filePath, 'utf-8');
@@ -242,7 +242,7 @@ async function readGeminiMdFiles(
       if (!isTestEnv) {
         const message = error instanceof Error ? error.message : String(error);
         logger.warn(
-          `Warning: Could not read ${getAllGeminiMdFilenames()} file at ${filePath}. Error: ${message}`,
+          `Warning: Could not read ${getAllAgentMdFilenames()} file at ${filePath}. Error: ${message}`,
         );
       }
       results.push({ filePath, content: null }); // Still include it with null content
@@ -253,7 +253,7 @@ async function readGeminiMdFiles(
 }
 
 function concatenateInstructions(
-  instructionContents: GeminiFileContent[],
+  instructionContents: AgentFileContent[],
   // CWD is needed to resolve relative paths for display markers
   currentWorkingDirectoryForDisplay: string,
 ): string {
@@ -274,7 +274,7 @@ function concatenateInstructions(
 }
 
 /**
- * Loads hierarchical GEMINI.md files and concatenates their content.
+ * Loads hierarchical AGENT.md files and concatenates their content.
  * This function is intended for use by the server.
  */
 export async function loadServerHierarchicalMemory(
@@ -290,7 +290,7 @@ export async function loadServerHierarchicalMemory(
   // For the server, homedir() refers to the server process's home.
   // This is consistent with how MemoryTool already finds the global path.
   const userHomePath = homedir();
-  const filePaths = await getGeminiMdFilePathsInternal(
+  const filePaths = await getAgentMdFilePathsInternal(
     currentWorkingDirectory,
     userHomePath,
     debugMode,
@@ -298,10 +298,10 @@ export async function loadServerHierarchicalMemory(
     extensionContextFilePaths,
   );
   if (filePaths.length === 0) {
-    if (debugMode) logger.debug('No GEMINI.md files found in hierarchy.');
+    if (debugMode) logger.debug('No AGENT.md files found in hierarchy.');
     return { memoryContent: '', fileCount: 0 };
   }
-  const contentsWithPaths = await readGeminiMdFiles(filePaths, debugMode);
+  const contentsWithPaths = await readAgentMdFiles(filePaths, debugMode);
   // Pass CWD for relative path display in concatenated content
   const combinedInstructions = concatenateInstructions(
     contentsWithPaths,

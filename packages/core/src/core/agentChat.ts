@@ -34,7 +34,7 @@ import {
   ApiRequestEvent,
   ApiResponseEvent,
 } from '../telemetry/types.js';
-import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
+import { DEFAULT_AGENT_FLASH_MODEL } from '../config/models.js';
 
 /**
  * Returns true if the response is valid, false otherwise.
@@ -126,7 +126,7 @@ function extractCuratedHistory(comprehensiveHistory: Content[]): Content[] {
  * @remarks
  * The session maintains all the turns between user and model.
  */
-export class GeminiChat {
+export class AgentChat {
   // A promise to represent the current state of the message being sent to the
   // model.
   private sendPromise: Promise<void> = Promise.resolve();
@@ -198,7 +198,7 @@ export class GeminiChat {
     }
 
     const currentModel = this.config.getModel();
-    const fallbackModel = DEFAULT_GEMINI_FLASH_MODEL;
+    const fallbackModel = DEFAULT_AGENT_FLASH_MODEL;
 
     // Don't fallback if already using Flash model
     if (currentModel === fallbackModel) {
@@ -235,7 +235,7 @@ export class GeminiChat {
    *
    * @example
    * ```ts
-   * const chat = ai.chats.create({model: 'gemini-2.0-flash'});
+   * const chat = ai.chats.create({model: 'agent-2.0-flash'});
    * const response = await chat.sendMessage({
    *   message: 'Why is the sky blue?'
    * });
@@ -257,7 +257,7 @@ export class GeminiChat {
     try {
       const apiCall = () =>
         this.contentGenerator.generateContent({
-          model: this.config.getModel() || DEFAULT_GEMINI_FLASH_MODEL,
+          model: this.config.getModel() || DEFAULT_AGENT_FLASH_MODEL,
           contents: requestContents,
           config: { ...this.generationConfig, ...params.config },
         });
@@ -327,7 +327,7 @@ export class GeminiChat {
    *
    * @example
    * ```ts
-   * const chat = ai.chats.create({model: 'gemini-2.0-flash'});
+   * const chat = ai.chats.create({model: 'agent-2.0-flash'});
    * const response = await chat.sendMessageStream({
    *   message: 'Why is the sky blue?'
    * });

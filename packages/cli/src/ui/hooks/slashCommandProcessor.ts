@@ -18,7 +18,7 @@ import {
   MCPServerStatus,
   getMCPDiscoveryState,
   getMCPServerStatus,
-} from '@google/gemini-cli-core';
+} from '@zartosht/agent-cli-core';
 import { useSessionStats } from '../contexts/SessionContext.js';
 import {
   Message,
@@ -177,12 +177,12 @@ export const useSlashCommandProcessor = (
   );
 
   const savedChatTags = useCallback(async () => {
-    const geminiDir = config?.getProjectTempDir();
-    if (!geminiDir) {
+    const agentDir = config?.getProjectTempDir();
+    if (!agentDir) {
       return [];
     }
     try {
-      const files = await fs.readdir(geminiDir);
+      const files = await fs.readdir(agentDir);
       return files
         .filter(
           (file) => file.startsWith('checkpoint-') && file.endsWith('.json'),
@@ -198,7 +198,7 @@ export const useSlashCommandProcessor = (
       {
         name: 'help',
         altName: '?',
-        description: 'for help on gemini-cli',
+        description: 'for help on agent-cli',
         action: (_mainCommand, _subCommand, _args) => {
           onDebugMessage('Opening help.');
           setShowHelp(true);
@@ -206,9 +206,9 @@ export const useSlashCommandProcessor = (
       },
       {
         name: 'docs',
-        description: 'open full Gemini CLI documentation in your browser',
+        description: 'open full Agent CLI documentation in your browser',
         action: async (_mainCommand, _subCommand, _args) => {
-          const docsUrl = 'https://goo.gle/gemini-cli-docs';
+          const docsUrl = 'https://goo.gle/agent-cli-docs';
           if (process.env.SANDBOX && process.env.SANDBOX !== 'sandbox-exec') {
             addMessage({
               type: MessageType.INFO,
@@ -231,7 +231,7 @@ export const useSlashCommandProcessor = (
         action: async (_mainCommand, _subCommand, _args) => {
           onDebugMessage('Clearing terminal and resetting chat.');
           clearItems();
-          await config?.getGeminiClient()?.resetChat();
+          await config?.getAgentClient()?.resetChat();
           console.clear();
           refreshStatic();
         },
@@ -332,7 +332,7 @@ export const useSlashCommandProcessor = (
           const serverNames = Object.keys(mcpServers);
 
           if (serverNames.length === 0) {
-            const docsUrl = 'https://goo.gle/gemini-cli-docs-mcp';
+            const docsUrl = 'https://goo.gle/agent-cli-docs-mcp';
             if (process.env.SANDBOX && process.env.SANDBOX !== 'sandbox-exec') {
               addMessage({
                 type: MessageType.INFO,
@@ -527,7 +527,7 @@ export const useSlashCommandProcessor = (
       },
       {
         name: 'tools',
-        description: 'list available Gemini CLI tools',
+        description: 'list available Agent CLI tools',
         action: async (_mainCommand, _subCommand, _args) => {
           // Check if the _subCommand includes a specific flag to control description visibility
           let useShowDescriptions = showToolDescriptions;
@@ -556,12 +556,12 @@ export const useSlashCommandProcessor = (
           }
 
           // Filter out MCP tools by checking if they have a serverName property
-          const geminiTools = tools.filter((tool) => !('serverName' in tool));
+          const agentTools = tools.filter((tool) => !('serverName' in tool));
 
-          let message = 'Available Gemini CLI tools:\n\n';
+          let message = 'Available Agent CLI tools:\n\n';
 
-          if (geminiTools.length > 0) {
-            geminiTools.forEach((tool) => {
+          if (agentTools.length > 0) {
+            agentTools.forEach((tool) => {
               if (useShowDescriptions && tool.description) {
                 // Format tool name in cyan using simple ANSI cyan color
                 message += `  - \u001b[36m${tool.displayName} (${tool.name})\u001b[0m:\n`;
@@ -647,7 +647,7 @@ export const useSlashCommandProcessor = (
           const osVersion = `${process.platform} ${process.version}`;
           let sandboxEnv = 'no sandbox';
           if (process.env.SANDBOX && process.env.SANDBOX !== 'sandbox-exec') {
-            sandboxEnv = process.env.SANDBOX.replace(/^gemini-(?:code-)?/, '');
+            sandboxEnv = process.env.SANDBOX.replace(/^agent-(?:code-)?/, '');
           } else if (process.env.SANDBOX === 'sandbox-exec') {
             sandboxEnv = `sandbox-exec (${
               process.env.SEATBELT_PROFILE || 'unknown'
@@ -667,7 +667,7 @@ export const useSlashCommandProcessor = (
 `;
 
           let bugReportUrl =
-            'https://github.com/google-gemini/gemini-cli/issues/new?template=bug_report.yml&title={title}&info={info}';
+            'https://github.com/google-agent/agent-cli/issues/new?template=bug_report.yml&title={title}&info={info}';
           const bugCommand = config?.getBugCommand();
           if (bugCommand?.urlTemplate) {
             bugReportUrl = bugCommand.urlTemplate;
@@ -704,7 +704,7 @@ export const useSlashCommandProcessor = (
           const tag = (args || '').trim();
           const logger = new Logger(config?.getSessionId() || '');
           await logger.initialize();
-          const chat = await config?.getGeminiClient()?.getChat();
+          const chat = await config?.getAgentClient()?.getChat();
           if (!chat) {
             addMessage({
               type: MessageType.ERROR,
@@ -773,7 +773,7 @@ export const useSlashCommandProcessor = (
               chat.clearHistory();
               const rolemap: { [key: string]: MessageType } = {
                 user: MessageType.USER,
-                model: MessageType.GEMINI,
+                model: MessageType.AGENT,
               };
               let hasSystemPrompt = false;
               let i = 0;
@@ -800,7 +800,7 @@ export const useSlashCommandProcessor = (
                   addItem(
                     {
                       type:
-                        (item.role && rolemap[item.role]) || MessageType.GEMINI,
+                        (item.role && rolemap[item.role]) || MessageType.AGENT,
                       text,
                     } as HistoryItemWithoutId,
                     i,
@@ -883,7 +883,7 @@ export const useSlashCommandProcessor = (
           });
           try {
             const compressed = await config!
-              .getGeminiClient()!
+              .getAgentClient()!
               .tryCompressChat(true);
             if (compressed) {
               addMessage({
@@ -943,7 +943,7 @@ export const useSlashCommandProcessor = (
           if (!checkpointDir) {
             addMessage({
               type: MessageType.ERROR,
-              content: 'Could not determine the .gemini directory path.',
+              content: 'Could not determine the .agent directory path.',
               timestamp: new Date(),
             });
             return;
@@ -1004,7 +1004,7 @@ export const useSlashCommandProcessor = (
 
             if (toolCallData.clientHistory) {
               await config
-                ?.getGeminiClient()
+                ?.getAgentClient()
                 ?.setHistory(toolCallData.clientHistory);
             }
 
@@ -1107,7 +1107,7 @@ export const useSlashCommandProcessor = (
             typeof actionResult === 'object' &&
             actionResult?.shouldScheduleTool
           ) {
-            return actionResult; // Return the object for useGeminiStream
+            return actionResult; // Return the object for useAgentStream
           }
           return true; // Command was handled, but no tool to schedule
         }

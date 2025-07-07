@@ -7,7 +7,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { vi } from 'vitest';
 import { useShellCommandProcessor } from './shellCommandProcessor';
-import { Config, GeminiClient } from '@google/gemini-cli-core';
+import { Config, AgentClient } from '@zartosht/agent-cli-core';
 import * as fs from 'fs';
 import EventEmitter from 'events';
 
@@ -22,7 +22,7 @@ vi.mock('os', () => ({
   platform: () => 'linux',
   tmpdir: () => '/tmp',
 }));
-vi.mock('@google/gemini-cli-core');
+vi.mock('@zartosht/agent-cli-core');
 vi.mock('../utils/textUtils.js', () => ({
   isBinary: vi.fn(),
 }));
@@ -34,7 +34,7 @@ describe('useShellCommandProcessor', () => {
   let onExecMock: vi.Mock;
   let onDebugMessageMock: vi.Mock;
   let configMock: Config;
-  let geminiClientMock: GeminiClient;
+  let agentClientMock: AgentClient;
 
   beforeEach(async () => {
     const { spawn } = await import('child_process');
@@ -56,9 +56,9 @@ describe('useShellCommandProcessor', () => {
       getTargetDir: () => '/test/dir',
     } as unknown as Config;
 
-    geminiClientMock = {
+    agentClientMock = {
       addHistory: vi.fn(),
-    } as unknown as GeminiClient;
+    } as unknown as AgentClient;
   });
 
   afterEach(() => {
@@ -73,7 +73,7 @@ describe('useShellCommandProcessor', () => {
         onExecMock,
         onDebugMessageMock,
         configMock,
-        geminiClientMock,
+        agentClientMock,
       ),
     );
 
@@ -107,7 +107,7 @@ describe('useShellCommandProcessor', () => {
       type: 'info',
       text: 'file1.txt\nfile2.txt',
     });
-    expect(geminiClientMock.addHistory).toHaveBeenCalledTimes(1);
+    expect(agentClientMock.addHistory).toHaveBeenCalledTimes(1);
   });
 
   it('should handle binary output', async () => {

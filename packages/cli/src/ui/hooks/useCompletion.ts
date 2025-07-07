@@ -15,7 +15,7 @@ import {
   getErrorMessage,
   Config,
   FileDiscoveryService,
-} from '@google/gemini-cli-core';
+} from '@zartosht/agent-cli-core';
 import {
   MAX_SUGGESTIONS_TO_SHOW,
   Suggestion,
@@ -220,7 +220,7 @@ export function useCompletion(
       fileDiscovery: FileDiscoveryService | null,
       filterOptions: {
         respectGitIgnore?: boolean;
-        respectGeminiIgnore?: boolean;
+        respectAgentIgnore?: boolean;
       },
       currentRelativePath = '',
       depth = 0,
@@ -297,7 +297,7 @@ export function useCompletion(
       fileDiscoveryService: FileDiscoveryService,
       filterOptions: {
         respectGitIgnore?: boolean;
-        respectGeminiIgnore?: boolean;
+        respectAgentIgnore?: boolean;
       },
       maxResults = 50,
     ): Promise<Suggestion[]> => {
@@ -339,7 +339,7 @@ export function useCompletion(
         config?.getEnableRecursiveFileSearch() ?? true;
       const filterOptions = {
         respectGitIgnore: config?.getFileFilteringRespectGitIgnore() ?? true,
-        respectGeminiIgnore: true,
+        respectAgentIgnore: true,
       };
 
       try {

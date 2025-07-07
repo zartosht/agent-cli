@@ -6,13 +6,12 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { PartListUnion, PartUnion } from '@google/genai';
 import {
   Config,
   getErrorMessage,
   isNodeError,
   unescapePath,
-} from '@google/gemini-cli-core';
+} from '@zartosht/agent-cli-core';
 import {
   HistoryItem,
   IndividualToolCallDisplay,
@@ -30,7 +29,7 @@ interface HandleAtCommandParams {
 }
 
 interface HandleAtCommandResult {
-  processedQuery: PartListUnion | null;
+  processedQuery: /* PartListUnion */ any | null;
   shouldProceed: boolean;
 }
 
@@ -343,7 +342,7 @@ export async function handleAtCommand({
     };
   }
 
-  const processedQueryParts: PartUnion[] = [{ text: initialQueryText }];
+  const processedQueryParts: /*PartUnion */ any[] = [{ text: initialQueryText }];
 
   const toolArgs = {
     paths: pathSpecsToRead,

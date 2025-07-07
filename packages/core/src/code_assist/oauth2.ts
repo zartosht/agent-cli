@@ -35,11 +35,11 @@ const OAUTH_SCOPE = [
 
 const HTTP_REDIRECT = 301;
 const SIGN_IN_SUCCESS_URL =
-  'https://developers.google.com/gemini-code-assist/auth_success_gemini';
+  'https://developers.google.com/agent-code-assist/auth_success_agent';
 const SIGN_IN_FAILURE_URL =
-  'https://developers.google.com/gemini-code-assist/auth_failure_gemini';
+  'https://developers.google.com/agent-code-assist/auth_failure_agent';
 
-const GEMINI_DIR = '.gemini';
+const AGENT_DIR = '.agent';
 const CREDENTIAL_FILENAME = 'oauth_creds.json';
 const GOOGLE_ACCOUNT_ID_FILENAME = 'google_account_id';
 
@@ -221,11 +221,11 @@ async function cacheCredentials(credentials: Credentials) {
 }
 
 function getCachedCredentialPath(): string {
-  return path.join(os.homedir(), GEMINI_DIR, CREDENTIAL_FILENAME);
+  return path.join(os.homedir(), AGENT_DIR, CREDENTIAL_FILENAME);
 }
 
 function getGoogleAccountIdCachePath(): string {
-  return path.join(os.homedir(), GEMINI_DIR, GOOGLE_ACCOUNT_ID_FILENAME);
+  return path.join(os.homedir(), AGENT_DIR, GOOGLE_ACCOUNT_ID_FILENAME);
 }
 
 async function cacheGoogleAccountId(googleAccountId: string): Promise<void> {

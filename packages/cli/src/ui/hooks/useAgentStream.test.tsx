@@ -7,7 +7,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useGeminiStream, mergePartListUnions } from './useGeminiStream.js';
+import { useAgentStream, mergePartListUnions } from './useAgentStream.js';
 import { useInput } from 'ink';
 import {
   useReactToolScheduler,
@@ -16,7 +16,7 @@ import {
   TrackedExecutingToolCall,
   TrackedCancelledToolCall,
 } from './useReactToolScheduler.js';
-import { Config, EditorType, AuthType } from '@google/gemini-cli-core';
+import { Config, EditorType, AuthType } from '@zartosht/agent-cli-core';
 import { Part, PartListUnion } from '@google/genai';
 import { UseHistoryManagerReturn } from './useHistoryManager.js';
 import { HistoryItem, MessageType, StreamingState } from '../types.js';
@@ -29,7 +29,7 @@ const mockSendMessageStream = vi
   .mockReturnValue((async function* () {})());
 const mockStartChat = vi.fn();
 
-const MockedGeminiClientClass = vi.hoisted(() =>
+const MockedAgentClientClass = vi.hoisted(() =>
   vi.fn().mockImplementation(function (this: any, _config: any) {
     // _config
     this.startChat = mockStartChat;
@@ -42,12 +42,12 @@ const MockedUserPromptEvent = vi.hoisted(() =>
   vi.fn().mockImplementation(() => {}),
 );
 
-vi.mock('@google/gemini-cli-core', async (importOriginal) => {
+vi.mock('@zartosht/agent-cli-core', async (importOriginal) => {
   const actualCoreModule = (await importOriginal()) as any;
   return {
     ...actualCoreModule,
     GitService: vi.fn(),
-    GeminiClient: MockedGeminiClientClass,
+    AgentClient: MockedAgentClientClass,
     UserPromptEvent: MockedUserPromptEvent,
   };
 });
@@ -243,8 +243,8 @@ describe('mergePartListUnions', () => {
   });
 });
 
-// --- Tests for useGeminiStream Hook ---
-describe('useGeminiStream', () => {
+// --- Tests for useAgentStream Hook ---
+describe('useAgentStream', () => {
   let mockAddItem: Mock;
   let mockSetShowHelp: Mock;
   let mockConfig: Config;
@@ -259,17 +259,17 @@ describe('useGeminiStream', () => {
 
     mockAddItem = vi.fn();
     mockSetShowHelp = vi.fn();
-    // Define the mock for getGeminiClient
-    const mockGetGeminiClient = vi.fn().mockImplementation(() => {
-      // MockedGeminiClientClass is defined in the module scope by the previous change.
+    // Define the mock for getAgentClient
+    const mockGetAgentClient = vi.fn().mockImplementation(() => {
+      // MockedAgentClientClass is defined in the module scope by the previous change.
       // It will use the mockStartChat and mockSendMessageStream that are managed within beforeEach.
-      const clientInstance = new MockedGeminiClientClass(mockConfig);
+      const clientInstance = new MockedAgentClientClass(mockConfig);
       return clientInstance;
     });
 
     mockConfig = {
       apiKey: 'test-api-key',
-      model: 'gemini-pro',
+      model: 'agent-pro',
       sandbox: false,
       targetDir: '/test/dir',
       debugMode: false,
@@ -282,7 +282,7 @@ describe('useGeminiStream', () => {
       mcpServers: undefined,
       userAgent: 'test-agent',
       userMemory: '',
-      geminiMdFileCount: 0,
+      agentMdFileCount: 0,
       alwaysSkipModificationConfirmation: false,
       vertexai: false,
       showMemoryUsage: false,
@@ -292,7 +292,7 @@ describe('useGeminiStream', () => {
       ),
       getProjectRoot: vi.fn(() => '/test/dir'),
       getCheckpointingEnabled: vi.fn(() => false),
-      getGeminiClient: mockGetGeminiClient,
+      getAgentClient: mockGetAgentClient,
       getUsageStatisticsEnabled: () => true,
       getDebugMode: () => false,
       addHistory: vi.fn(),
@@ -313,11 +313,11 @@ describe('useGeminiStream', () => {
       mockMarkToolsAsSubmitted,
     ]);
 
-    // Reset mocks for GeminiClient instance methods (startChat and sendMessageStream)
-    // The GeminiClient constructor itself is mocked at the module level.
+    // Reset mocks for AgentClient instance methods (startChat and sendMessageStream)
+    // The AgentClient constructor itself is mocked at the module level.
     mockStartChat.mockClear().mockResolvedValue({
       sendMessageStream: mockSendMessageStream,
-    } as unknown as any); // GeminiChat -> any
+    } as unknown as any); // AgentChat -> any
     mockSendMessageStream
       .mockClear()
       .mockReturnValue((async function* () {})());
@@ -326,7 +326,7 @@ describe('useGeminiStream', () => {
   const mockLoadedSettings: LoadedSettings = {
     merged: { preferredEditor: 'vscode' },
     user: { path: '/user/settings.json', settings: {} },
-    workspace: { path: '/workspace/.gemini/settings.json', settings: {} },
+    workspace: { path: '/workspace/.agent/settings.json', settings: {} },
     errors: [],
     forScope: vi.fn(),
     setValue: vi.fn(),
@@ -334,7 +334,7 @@ describe('useGeminiStream', () => {
 
   const renderTestHook = (
     initialToolCalls: TrackedToolCall[] = [],
-    geminiClient?: any,
+    agentClient?: any,
   ) => {
     let currentToolCalls = initialToolCalls;
     const setToolCalls = (newToolCalls: TrackedToolCall[]) => {
@@ -348,7 +348,7 @@ describe('useGeminiStream', () => {
       mockMarkToolsAsSubmitted,
     ]);
 
-    const client = geminiClient || mockConfig.getGeminiClient();
+    const client = agentClient || mockConfig.getAgentClient();
 
     const { result, rerender } = renderHook(
       (props: {
@@ -372,7 +372,7 @@ describe('useGeminiStream', () => {
         if (props.toolCalls) {
           setToolCalls(props.toolCalls);
         }
-        return useGeminiStream(
+        return useAgentStream(
           props.client,
           props.history,
           props.addItem,
@@ -425,7 +425,7 @@ describe('useGeminiStream', () => {
           isClientInitiated: false,
         },
         status: 'success',
-        responseSubmittedToGemini: false,
+        responseSubmittedToAgent: false,
         response: {
           callId: 'call1',
           responseParts: [{ text: 'tool 1 response' }],
@@ -443,7 +443,7 @@ describe('useGeminiStream', () => {
       {
         request: { callId: 'call2', name: 'tool2', args: {} },
         status: 'executing',
-        responseSubmittedToGemini: false,
+        responseSubmittedToAgent: false,
         tool: {
           name: 'tool2',
           description: 'desc2',
@@ -480,7 +480,7 @@ describe('useGeminiStream', () => {
           isClientInitiated: false,
         },
         status: 'success',
-        responseSubmittedToGemini: false,
+        responseSubmittedToAgent: false,
         response: { callId: 'call1', responseParts: toolCall1ResponseParts },
       } as TrackedCompletedToolCall,
       {
@@ -491,7 +491,7 @@ describe('useGeminiStream', () => {
           isClientInitiated: false,
         },
         status: 'error',
-        responseSubmittedToGemini: false,
+        responseSubmittedToAgent: false,
         response: { callId: 'call2', responseParts: toolCall2ResponseParts },
       } as TrackedCompletedToolCall, // Treat error as a form of completion for submission
     ];
@@ -507,8 +507,8 @@ describe('useGeminiStream', () => {
     });
 
     renderHook(() =>
-      useGeminiStream(
-        new MockedGeminiClientClass(mockConfig),
+      useAgentStream(
+        new MockedAgentClientClass(mockConfig),
         [],
         mockAddItem,
         mockSetShowHelp,
@@ -555,10 +555,10 @@ describe('useGeminiStream', () => {
         },
         status: 'cancelled',
         response: { callId: '1', responseParts: [{ text: 'cancelled' }] },
-        responseSubmittedToGemini: false,
+        responseSubmittedToAgent: false,
       } as TrackedCancelledToolCall,
     ];
-    const client = new MockedGeminiClientClass(mockConfig);
+    const client = new MockedAgentClientClass(mockConfig);
 
     // Capture the onComplete callback
     let capturedOnComplete:
@@ -571,7 +571,7 @@ describe('useGeminiStream', () => {
     });
 
     renderHook(() =>
-      useGeminiStream(
+      useAgentStream(
         client,
         [],
         mockAddItem,
@@ -626,7 +626,7 @@ describe('useGeminiStream', () => {
         resultDisplay: undefined,
         error: undefined,
       },
-      responseSubmittedToGemini: false,
+      responseSubmittedToAgent: false,
     };
     const cancelledToolCall2: TrackedCancelledToolCall = {
       request: {
@@ -649,10 +649,10 @@ describe('useGeminiStream', () => {
         resultDisplay: undefined,
         error: undefined,
       },
-      responseSubmittedToGemini: false,
+      responseSubmittedToAgent: false,
     };
     const allCancelledTools = [cancelledToolCall1, cancelledToolCall2];
-    const client = new MockedGeminiClientClass(mockConfig);
+    const client = new MockedAgentClientClass(mockConfig);
 
     let capturedOnComplete:
       | ((completedTools: TrackedToolCall[]) => Promise<void>)
@@ -664,7 +664,7 @@ describe('useGeminiStream', () => {
     });
 
     renderHook(() =>
-      useGeminiStream(
+      useAgentStream(
         client,
         [],
         mockAddItem,
@@ -724,7 +724,7 @@ describe('useGeminiStream', () => {
           isClientInitiated: false,
         },
         status: 'executing',
-        responseSubmittedToGemini: false,
+        responseSubmittedToAgent: false,
         tool: {
           name: 'tool1',
           description: 'desc',
@@ -764,8 +764,8 @@ describe('useGeminiStream', () => {
     });
 
     const { result, rerender } = renderHook(() =>
-      useGeminiStream(
-        new MockedGeminiClientClass(mockConfig),
+      useAgentStream(
+        new MockedAgentClientClass(mockConfig),
         [],
         mockAddItem,
         mockSetShowHelp,
@@ -928,7 +928,7 @@ describe('useGeminiStream', () => {
 
       // The text should not have been updated with " Canceled"
       const lastCall = mockAddItem.mock.calls.find(
-        (call) => call[0].type === 'gemini',
+        (call) => call[0].type === 'agent',
       );
       expect(lastCall?.[0].text).toBe('Initial');
 
@@ -941,7 +941,7 @@ describe('useGeminiStream', () => {
         {
           request: { callId: 'call1', name: 'tool1', args: {} },
           status: 'executing',
-          responseSubmittedToGemini: false,
+          responseSubmittedToAgent: false,
           tool: {
             name: 'tool1',
             description: 'desc1',
@@ -967,7 +967,7 @@ describe('useGeminiStream', () => {
   });
 
   describe('Client-Initiated Tool Calls', () => {
-    it('should execute a client-initiated tool without sending a response to Gemini', async () => {
+    it('should execute a client-initiated tool without sending a response to Agent', async () => {
       const clientToolRequest = {
         shouldScheduleTool: true,
         toolName: 'save_memory',
@@ -983,7 +983,7 @@ describe('useGeminiStream', () => {
           isClientInitiated: true,
         },
         status: 'success',
-        responseSubmittedToGemini: false,
+        responseSubmittedToAgent: false,
         response: {
           callId: 'client-call-1',
           responseParts: [{ text: 'Memory saved' }],
@@ -1008,8 +1008,8 @@ describe('useGeminiStream', () => {
       });
 
       const { result } = renderHook(() =>
-        useGeminiStream(
-          new MockedGeminiClientClass(mockConfig),
+        useAgentStream(
+          new MockedAgentClientClass(mockConfig),
           [],
           mockAddItem,
           mockSetShowHelp,
@@ -1041,7 +1041,7 @@ describe('useGeminiStream', () => {
         expect(mockMarkToolsAsSubmitted).toHaveBeenCalledWith([
           'client-call-1',
         ]);
-        // Crucially, no message should be sent to the Gemini API
+        // Crucially, no message should be sent to the Agent API
         expect(mockSendMessageStream).not.toHaveBeenCalled();
       });
     });
@@ -1058,7 +1058,7 @@ describe('useGeminiStream', () => {
           isClientInitiated: true,
         },
         status: 'success',
-        responseSubmittedToGemini: false,
+        responseSubmittedToAgent: false,
         response: {
           callId: 'save-mem-call-1',
           responseParts: [{ text: 'Memory saved' }],
@@ -1083,8 +1083,8 @@ describe('useGeminiStream', () => {
       });
 
       renderHook(() =>
-        useGeminiStream(
-          new MockedGeminiClientClass(mockConfig),
+        useAgentStream(
+          new MockedAgentClientClass(mockConfig),
           [],
           mockAddItem,
           mockSetShowHelp,
@@ -1132,8 +1132,8 @@ describe('useGeminiStream', () => {
       } as unknown as Config;
 
       const { result } = renderHook(() =>
-        useGeminiStream(
-          new MockedGeminiClientClass(testConfig),
+        useAgentStream(
+          new MockedAgentClientClass(testConfig),
           [],
           mockAddItem,
           mockSetShowHelp,

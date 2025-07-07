@@ -212,7 +212,7 @@ async function connectAndDiscover(
   }
 
   const mcpClient = new Client({
-    name: 'gemini-cli-mcp-client',
+    name: 'agent-cli-mcp-client',
     version: '0.0.1',
   });
 
@@ -307,7 +307,7 @@ async function connectAndDiscover(
 
       let toolNameForModel = funcDecl.name;
 
-      // Replace invalid characters (based on 400 error message from Gemini API) with underscores
+      // Replace invalid characters (based on 400 error message from Agent API) with underscores
       toolNameForModel = toolNameForModel.replace(/[^a-zA-Z0-9_.-]/g, '_');
 
       const existingTool = toolRegistry.getTool(toolNameForModel);
@@ -316,7 +316,7 @@ async function connectAndDiscover(
       }
 
       // If longer than 63 characters, replace middle with '___'
-      // (Gemini API says max length 64, but actual limit seems to be 63)
+      // (Agent API says max length 64, but actual limit seems to be 63)
       if (toolNameForModel.length > 63) {
         toolNameForModel =
           toolNameForModel.slice(0, 28) + '___' + toolNameForModel.slice(-32);

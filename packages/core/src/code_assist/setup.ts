@@ -6,7 +6,7 @@
 
 import {
   ClientMetadata,
-  GeminiUserTier,
+  AgentUserTier,
   LoadCodeAssistResponse,
   OnboardUserRequest,
   UserTierId,
@@ -17,7 +17,7 @@ import { OAuth2Client } from 'google-auth-library';
 export class ProjectIdRequiredError extends Error {
   constructor() {
     super(
-      'This account requires setting the GOOGLE_CLOUD_PROJECT env var. See https://goo.gle/gemini-cli-auth-docs#workspace-gca',
+      'This account requires setting the GOOGLE_CLOUD_PROJECT env var. See https://goo.gle/agent-cli-auth-docs#workspace-gca',
     );
   }
 }
@@ -34,7 +34,7 @@ export async function setupUser(client: OAuth2Client): Promise<string> {
   const clientMetadata: ClientMetadata = {
     ideType: 'IDE_UNSPECIFIED',
     platform: 'PLATFORM_UNSPECIFIED',
-    pluginType: 'GEMINI',
+    pluginType: 'AGENT',
     duetProject: projectId,
   };
 
@@ -67,7 +67,7 @@ export async function setupUser(client: OAuth2Client): Promise<string> {
   return lroRes.response?.cloudaicompanionProject?.id || '';
 }
 
-function getOnboardTier(res: LoadCodeAssistResponse): GeminiUserTier {
+function getOnboardTier(res: LoadCodeAssistResponse): AgentUserTier {
   if (res.currentTier) {
     return res.currentTier;
   }

@@ -80,20 +80,20 @@ node_modules/
     it('should handle custom patterns file name', () => {
       vi.mocked(isGitRepository).mockReturnValue(false);
       vi.mocked(fs.readFileSync).mockImplementation((filePath) => {
-        if (filePath === path.join(mockProjectRoot, '.geminiignore')) {
+        if (filePath === path.join(mockProjectRoot, '.agentignore')) {
           return 'temp/\n*.tmp';
         }
         throw new Error('ENOENT');
       });
 
-      parser.loadPatterns('.geminiignore');
+      parser.loadPatterns('.agentignore');
       expect(parser.getPatterns()).toEqual(['temp/', '*.tmp']);
       expect(parser.isIgnored('temp/file.txt')).toBe(true);
       expect(parser.isIgnored('src/file.tmp')).toBe(true);
     });
 
-    it('should initialize without errors when no .geminiignore exists', () => {
-      expect(() => parser.loadPatterns('.geminiignore')).not.toThrow();
+    it('should initialize without errors when no .agentignore exists', () => {
+      expect(() => parser.loadPatterns('.agentignore')).not.toThrow();
     });
   });
 

@@ -6,7 +6,7 @@
 
 import { GaxiosError } from 'gaxios';
 import { useState, useEffect, useCallback } from 'react';
-import { Config, CodeAssistServer, UserTierId } from '@google/gemini-cli-core';
+import { Config, CodeAssistServer, UserTierId } from '@zartosht/agent-cli-core';
 
 export interface PrivacyState {
   isLoading: boolean;
@@ -81,7 +81,7 @@ export const usePrivacySettings = (config: Config) => {
 };
 
 function getCodeAssistServer(config: Config): CodeAssistServer {
-  const server = config.getGeminiClient().getContentGenerator();
+  const server = config.getAgentClient().getContentGenerator();
   // Neither of these cases should ever happen.
   if (!(server instanceof CodeAssistServer)) {
     throw new Error('Oauth not being used');
@@ -97,7 +97,7 @@ async function getTier(server: CodeAssistServer): Promise<UserTierId> {
     metadata: {
       ideType: 'IDE_UNSPECIFIED',
       platform: 'PLATFORM_UNSPECIFIED',
-      pluginType: 'GEMINI',
+      pluginType: 'AGENT',
       duetProject: server.projectId,
     },
   });

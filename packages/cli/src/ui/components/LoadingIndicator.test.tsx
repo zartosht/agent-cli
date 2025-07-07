@@ -12,9 +12,9 @@ import { StreamingContext } from '../contexts/StreamingContext.js';
 import { StreamingState } from '../types.js';
 import { vi } from 'vitest';
 
-// Mock GeminiRespondingSpinner
-vi.mock('./GeminiRespondingSpinner.js', () => ({
-  GeminiRespondingSpinner: ({
+// Mock AgentRespondingSpinner
+vi.mock('./AgentRespondingSpinner.js', () => ({
+  AgentRespondingSpinner: ({
     nonRespondingDisplay,
   }: {
     nonRespondingDisplay?: string;

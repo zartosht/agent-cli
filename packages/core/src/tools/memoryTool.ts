@@ -45,36 +45,36 @@ Do NOT use this tool:
 - \`fact\` (string, required): The specific fact or piece of information to remember. This should be a clear, self-contained statement. For example, if the user says "My favorite color is blue", the fact would be "My favorite color is blue".
 `;
 
-export const GEMINI_CONFIG_DIR = '.gemini';
-export const DEFAULT_CONTEXT_FILENAME = 'GEMINI.md';
-export const MEMORY_SECTION_HEADER = '## Gemini Added Memories';
+export const AGENT_CONFIG_DIR = '.agent';
+export const DEFAULT_CONTEXT_FILENAME = 'AGENT.md';
+export const MEMORY_SECTION_HEADER = '## Agent Added Memories';
 
-// This variable will hold the currently configured filename for GEMINI.md context files.
-// It defaults to DEFAULT_CONTEXT_FILENAME but can be overridden by setGeminiMdFilename.
-let currentGeminiMdFilename: string | string[] = DEFAULT_CONTEXT_FILENAME;
+// This variable will hold the currently configured filename for AGENT.md context files.
+// It defaults to DEFAULT_CONTEXT_FILENAME but can be overridden by setAgentMdFilename.
+let currentAgentMdFilename: string | string[] = DEFAULT_CONTEXT_FILENAME;
 
-export function setGeminiMdFilename(newFilename: string | string[]): void {
+export function setAgentMdFilename(newFilename: string | string[]): void {
   if (Array.isArray(newFilename)) {
     if (newFilename.length > 0) {
-      currentGeminiMdFilename = newFilename.map((name) => name.trim());
+      currentAgentMdFilename = newFilename.map((name) => name.trim());
     }
   } else if (newFilename && newFilename.trim() !== '') {
-    currentGeminiMdFilename = newFilename.trim();
+    currentAgentMdFilename = newFilename.trim();
   }
 }
 
-export function getCurrentGeminiMdFilename(): string {
-  if (Array.isArray(currentGeminiMdFilename)) {
-    return currentGeminiMdFilename[0];
+export function getCurrentAgentMdFilename(): string {
+  if (Array.isArray(currentAgentMdFilename)) {
+    return currentAgentMdFilename[0];
   }
-  return currentGeminiMdFilename;
+  return currentAgentMdFilename;
 }
 
-export function getAllGeminiMdFilenames(): string[] {
-  if (Array.isArray(currentGeminiMdFilename)) {
-    return currentGeminiMdFilename;
+export function getAllAgentMdFilenames(): string[] {
+  if (Array.isArray(currentAgentMdFilename)) {
+    return currentAgentMdFilename;
   }
-  return [currentGeminiMdFilename];
+  return [currentAgentMdFilename];
 }
 
 interface SaveMemoryParams {
@@ -82,7 +82,7 @@ interface SaveMemoryParams {
 }
 
 function getGlobalMemoryFilePath(): string {
-  return path.join(homedir(), GEMINI_CONFIG_DIR, getCurrentGeminiMdFilename());
+  return path.join(homedir(), AGENT_CONFIG_DIR, getCurrentAgentMdFilename());
 }
 
 /**

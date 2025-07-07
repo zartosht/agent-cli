@@ -55,7 +55,7 @@ export interface WebSearchToolResult extends ToolResult {
 }
 
 /**
- * A tool to perform web searches using Google Search via the Gemini API.
+ * A tool to perform web searches using Google Search via the Agent API.
  */
 export class WebSearchTool extends BaseTool<
   WebSearchToolParams,
@@ -67,7 +67,7 @@ export class WebSearchTool extends BaseTool<
     super(
       WebSearchTool.Name,
       'GoogleSearch',
-      'Performs a web search using Google Search (via the Gemini API) and returns the results. This tool is useful for finding information on the internet based on a query.',
+      'Performs a web search using Google Search (via the Agent API) and returns the results. This tool is useful for finding information on the internet based on a query.',
       {
         type: 'object',
         properties: {
@@ -117,10 +117,10 @@ export class WebSearchTool extends BaseTool<
         returnDisplay: validationError,
       };
     }
-    const geminiClient = this.config.getGeminiClient();
+    const agentClient = this.config.getAgentClient();
 
     try {
-      const response = await geminiClient.generateContent(
+      const response = await agentClient.generateContent(
         [{ role: 'user', parts: [{ text: params.query }] }],
         { tools: [{ googleSearch: {} }] },
         signal,

@@ -34,7 +34,7 @@ describe('WebFetchTool', () => {
       const tool = new WebFetchTool(mockConfig);
       const params = {
         prompt:
-          'fetch https://github.com/google/gemini-react/blob/main/README.md',
+          'fetch https://github.com/google/agent-react/blob/main/README.md',
       };
       const confirmationDetails = await tool.shouldConfirmExecute(params);
 
@@ -42,9 +42,9 @@ describe('WebFetchTool', () => {
         type: 'info',
         title: 'Confirm Web Fetch',
         prompt:
-          'fetch https://github.com/google/gemini-react/blob/main/README.md',
+          'fetch https://github.com/google/agent-react/blob/main/README.md',
         urls: [
-          'https://raw.githubusercontent.com/google/gemini-react/main/README.md',
+          'https://raw.githubusercontent.com/google/agent-react/main/README.md',
         ],
         onConfirm: expect.any(Function),
       });

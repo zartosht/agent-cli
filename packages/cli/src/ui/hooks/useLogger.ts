@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { sessionId, Logger } from '@google/gemini-cli-core';
+import { sessionId, Logger } from '@zartosht/agent-cli-core';
 
 /**
  * Hook to manage the logger instance.
@@ -17,7 +17,7 @@ export const useLogger = () => {
     const newLogger = new Logger(sessionId);
     /**
      * Start async initialization, no need to await. Using await slows down the
-     * time from launch to see the gemini-cli prompt and it's better to not save
+     * time from launch to see the agent-cli prompt and it's better to not save
      * messages than for the cli to hanging waiting for the logger to loading.
      */
     newLogger

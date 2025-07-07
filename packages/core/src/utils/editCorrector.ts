@@ -10,12 +10,12 @@ import {
   SchemaUnion,
   Type,
 } from '@google/genai';
-import { GeminiClient } from '../core/client.js';
+import { AgentClient } from '../core/client.js';
 import { EditToolParams } from '../tools/edit.js';
 import { LruCache } from './LruCache.js';
-import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
+import { DEFAULT_AGENT_FLASH_MODEL } from '../config/models.js';
 
-const EditModel = DEFAULT_GEMINI_FLASH_MODEL;
+const EditModel = DEFAULT_AGENT_FLASH_MODEL;
 const EditConfig: GenerateContentConfig = {
   thinkingConfig: {
     thinkingBudget: 0,
@@ -56,14 +56,14 @@ export interface CorrectedEditResult {
  *
  * @param currentContent The current content of the file.
  * @param originalParams The original EditToolParams
- * @param client The GeminiClient for LLM calls.
+ * @param client The AgentClient for LLM calls.
  * @returns A promise resolving to an object containing the (potentially corrected)
  *          EditToolParams (as CorrectedEditParams) and the final occurrences count.
  */
 export async function ensureCorrectEdit(
   currentContent: string,
   originalParams: EditToolParams, // This is the EditToolParams from edit.ts, without \'corrected\'
-  client: GeminiClient,
+  client: AgentClient,
   abortSignal: AbortSignal,
 ): Promise<CorrectedEditResult> {
   const cacheKey = `${currentContent}---${originalParams.old_string}---${originalParams.new_string}`;
@@ -74,7 +74,7 @@ export async function ensureCorrectEdit(
 
   let finalNewString = originalParams.new_string;
   const newStringPotentiallyEscaped =
-    unescapeStringForGeminiBug(originalParams.new_string) !==
+    unescapeStringForAgentBug(originalParams.new_string) !==
     originalParams.new_string;
 
   const expectedReplacements = originalParams.expected_replacements ?? 1;
@@ -123,7 +123,7 @@ export async function ensureCorrectEdit(
     return result;
   } else {
     // occurrences is 0 or some other unexpected state initially
-    const unescapedOldStringAttempt = unescapeStringForGeminiBug(
+    const unescapedOldStringAttempt = unescapeStringForAgentBug(
       originalParams.old_string,
     );
     occurrences = countOccurrences(currentContent, unescapedOldStringAttempt);
@@ -156,7 +156,7 @@ export async function ensureCorrectEdit(
         occurrences = llmOldOccurrences;
 
         if (newStringPotentiallyEscaped) {
-          const baseNewStringForLLMCorrection = unescapeStringForGeminiBug(
+          const baseNewStringForLLMCorrection = unescapeStringForAgentBug(
             originalParams.new_string,
           );
           finalNewString = await correctNewString(
@@ -211,7 +211,7 @@ export async function ensureCorrectEdit(
 
 export async function ensureCorrectFileContent(
   content: string,
-  client: GeminiClient,
+  client: AgentClient,
   abortSignal: AbortSignal,
 ): Promise<string> {
   const cachedResult = fileContentCorrectionCache.get(content);
@@ -220,7 +220,7 @@ export async function ensureCorrectFileContent(
   }
 
   const contentPotentiallyEscaped =
-    unescapeStringForGeminiBug(content) !== content;
+    unescapeStringForAgentBug(content) !== content;
   if (!contentPotentiallyEscaped) {
     fileContentCorrectionCache.set(content, content);
     return content;
@@ -249,7 +249,7 @@ const OLD_STRING_CORRECTION_SCHEMA: SchemaUnion = {
 };
 
 export async function correctOldStringMismatch(
-  geminiClient: GeminiClient,
+  agentClient: AgentClient,
   fileContent: string,
   problematicSnippet: string,
   abortSignal: AbortSignal,
@@ -278,7 +278,7 @@ Return ONLY the corrected target snippet in the specified JSON format with the k
   const contents: Content[] = [{ role: 'user', parts: [{ text: prompt }] }];
 
   try {
-    const result = await geminiClient.generateJson(
+    const result = await agentClient.generateJson(
       contents,
       OLD_STRING_CORRECTION_SCHEMA,
       abortSignal,
@@ -326,7 +326,7 @@ const NEW_STRING_CORRECTION_SCHEMA: SchemaUnion = {
  * Adjusts the new_string to align with a corrected old_string, maintaining the original intent.
  */
 export async function correctNewString(
-  geminiClient: GeminiClient,
+  agentClient: AgentClient,
   originalOldString: string,
   correctedOldString: string,
   originalNewString: string,
@@ -366,7 +366,7 @@ Return ONLY the corrected string in the specified JSON format with the key 'corr
   const contents: Content[] = [{ role: 'user', parts: [{ text: prompt }] }];
 
   try {
-    const result = await geminiClient.generateJson(
+    const result = await agentClient.generateJson(
       contents,
       NEW_STRING_CORRECTION_SCHEMA,
       abortSignal,
@@ -406,7 +406,7 @@ const CORRECT_NEW_STRING_ESCAPING_SCHEMA: SchemaUnion = {
 };
 
 export async function correctNewStringEscaping(
-  geminiClient: GeminiClient,
+  agentClient: AgentClient,
   oldString: string,
   potentiallyProblematicNewString: string,
   abortSignal: AbortSignal,
@@ -435,7 +435,7 @@ Return ONLY the corrected string in the specified JSON format with the key 'corr
   const contents: Content[] = [{ role: 'user', parts: [{ text: prompt }] }];
 
   try {
-    const result = await geminiClient.generateJson(
+    const result = await agentClient.generateJson(
       contents,
       CORRECT_NEW_STRING_ESCAPING_SCHEMA,
       abortSignal,
@@ -479,7 +479,7 @@ const CORRECT_STRING_ESCAPING_SCHEMA: SchemaUnion = {
 
 export async function correctStringEscaping(
   potentiallyProblematicString: string,
-  client: GeminiClient,
+  client: AgentClient,
   abortSignal: AbortSignal,
 ): Promise<string> {
   const prompt = `
@@ -562,7 +562,7 @@ function trimPairIfPossible(
 /**
  * Unescapes a string that might have been overly escaped by an LLM.
  */
-export function unescapeStringForGeminiBug(inputString: string): string {
+export function unescapeStringForAgentBug(inputString: string): string {
   // Regex explanation:
   // \\ : Matches exactly one literal backslash character.
   // (n|t|r|'|"|`|\\|\n) : This is a capturing group. It matches one of the following:

@@ -5,7 +5,7 @@
  */
 
 import { Message, MessageType } from '../types.js';
-import { Config } from '@google/gemini-cli-core';
+import { Config } from '@zartosht/agent-cli-core';
 import { LoadedSettings } from '../../config/settings.js';
 
 export function createShowMemoryAction(
@@ -30,7 +30,7 @@ export function createShowMemoryAction(
     }
 
     const currentMemory = config.getUserMemory();
-    const fileCount = config.getGeminiMdFileCount();
+    const fileCount = config.getAgentMdFileCount();
     const contextFileName = settings.merged.contextFileName;
     const contextFileNames = Array.isArray(contextFileName)
       ? contextFileName
@@ -66,8 +66,8 @@ export function createShowMemoryAction(
         type: MessageType.INFO,
         content:
           fileCount > 0
-            ? 'Hierarchical memory (GEMINI.md or other context files) is loaded but content is empty.'
-            : 'No hierarchical memory (GEMINI.md or other context files) is currently loaded.',
+            ? 'Hierarchical memory (AGENT.md or other context files) is loaded but content is empty.'
+            : 'No hierarchical memory (AGENT.md or other context files) is currently loaded.',
         timestamp: new Date(),
       });
     }

@@ -21,12 +21,12 @@ describe('converter', () => {
   describe('toCodeAssistRequest', () => {
     it('should convert a simple request with project', () => {
       const genaiReq: GenerateContentParameters = {
-        model: 'gemini-pro',
+        model: 'agent-pro',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
       const codeAssistReq = toGenerateContentRequest(genaiReq, 'my-project');
       expect(codeAssistReq).toEqual({
-        model: 'gemini-pro',
+        model: 'agent-pro',
         project: 'my-project',
         request: {
           contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
@@ -44,12 +44,12 @@ describe('converter', () => {
 
     it('should convert a request without a project', () => {
       const genaiReq: GenerateContentParameters = {
-        model: 'gemini-pro',
+        model: 'agent-pro',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
       const codeAssistReq = toGenerateContentRequest(genaiReq);
       expect(codeAssistReq).toEqual({
-        model: 'gemini-pro',
+        model: 'agent-pro',
         project: undefined,
         request: {
           contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
@@ -67,7 +67,7 @@ describe('converter', () => {
 
     it('should convert a request with sessionId', () => {
       const genaiReq: GenerateContentParameters = {
-        model: 'gemini-pro',
+        model: 'agent-pro',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
       const codeAssistReq = toGenerateContentRequest(
@@ -76,7 +76,7 @@ describe('converter', () => {
         'session-123',
       );
       expect(codeAssistReq).toEqual({
-        model: 'gemini-pro',
+        model: 'agent-pro',
         project: 'my-project',
         request: {
           contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
@@ -94,7 +94,7 @@ describe('converter', () => {
 
     it('should handle string content', () => {
       const genaiReq: GenerateContentParameters = {
-        model: 'gemini-pro',
+        model: 'agent-pro',
         contents: 'Hello',
       };
       const codeAssistReq = toGenerateContentRequest(genaiReq);
@@ -105,7 +105,7 @@ describe('converter', () => {
 
     it('should handle Part[] content', () => {
       const genaiReq: GenerateContentParameters = {
-        model: 'gemini-pro',
+        model: 'agent-pro',
         contents: [{ text: 'Hello' }, { text: 'World' }],
       };
       const codeAssistReq = toGenerateContentRequest(genaiReq);
@@ -117,7 +117,7 @@ describe('converter', () => {
 
     it('should handle system instructions', () => {
       const genaiReq: GenerateContentParameters = {
-        model: 'gemini-pro',
+        model: 'agent-pro',
         contents: 'Hello',
         config: {
           systemInstruction: 'You are a helpful assistant.',
@@ -132,7 +132,7 @@ describe('converter', () => {
 
     it('should handle generation config', () => {
       const genaiReq: GenerateContentParameters = {
-        model: 'gemini-pro',
+        model: 'agent-pro',
         contents: 'Hello',
         config: {
           temperature: 0.8,
@@ -148,7 +148,7 @@ describe('converter', () => {
 
     it('should handle all generation config fields', () => {
       const genaiReq: GenerateContentParameters = {
-        model: 'gemini-pro',
+        model: 'agent-pro',
         contents: 'Hello',
         config: {
           temperature: 0.1,

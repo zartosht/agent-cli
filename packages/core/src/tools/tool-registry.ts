@@ -335,7 +335,7 @@ export class ToolRegistry {
 }
 
 /**
- * Sanitizes a schema object in-place to ensure compatibility with the Gemini API.
+ * Sanitizes a schema object in-place to ensure compatibility with the Agent API.
  *
  * NOTE: This function mutates the passed schema object.
  *

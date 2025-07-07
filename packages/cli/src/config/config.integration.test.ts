@@ -12,7 +12,7 @@ import {
   Config,
   ConfigParameters,
   ContentGeneratorConfig,
-} from '@google/gemini-cli-core';
+} from '@zartosht/agent-cli-core';
 
 const TEST_CONTENT_GENERATOR_CONFIG: ContentGeneratorConfig = {
   apiKey: 'test-key',
@@ -21,8 +21,8 @@ const TEST_CONTENT_GENERATOR_CONFIG: ContentGeneratorConfig = {
 };
 
 // Mock file discovery service and tool registry
-vi.mock('@google/gemini-cli-core', async () => {
-  const actual = await vi.importActual('@google/gemini-cli-core');
+vi.mock('@zartosht/agent-cli-core', async () => {
+  const actual = await vi.importActual('@zartosht/agent-cli-core');
   return {
     ...actual,
     FileDiscoveryService: vi.fn().mockImplementation(() => ({
@@ -37,9 +37,9 @@ describe('Configuration Integration Tests', () => {
   let originalEnv: NodeJS.ProcessEnv;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(tmpdir(), 'gemini-cli-test-'));
+    tempDir = fs.mkdtempSync(path.join(tmpdir(), 'agent-cli-test-'));
     originalEnv = { ...process.env };
-    process.env.GEMINI_API_KEY = 'test-api-key';
+    process.env.AGENT_API_KEY = 'test-api-key';
     vi.clearAllMocks();
   });
 

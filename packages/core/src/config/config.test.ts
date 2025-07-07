@@ -7,7 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Config, ConfigParameters, SandboxConfig } from './config.js';
 import * as path from 'path';
-import { setGeminiMdFilename as mockSetGeminiMdFilename } from '../tools/memoryTool.js';
+import { setAgentMdFilename as mockSetAgentMdFilename } from '../tools/memoryTool.js';
 import {
   DEFAULT_TELEMETRY_TARGET,
   DEFAULT_OTLP_ENDPOINT,
@@ -36,10 +36,10 @@ vi.mock('../tools/web-fetch');
 vi.mock('../tools/read-many-files');
 vi.mock('../tools/memoryTool', () => ({
   MemoryTool: vi.fn(),
-  setGeminiMdFilename: vi.fn(),
-  getCurrentGeminiMdFilename: vi.fn(() => 'GEMINI.md'), // Mock the original filename
-  DEFAULT_CONTEXT_FILENAME: 'GEMINI.md',
-  GEMINI_CONFIG_DIR: '.gemini',
+  setAgentMdFilename: vi.fn(),
+  getCurrentAgentMdFilename: vi.fn(() => 'AGENT.md'), // Mock the original filename
+  DEFAULT_CONTEXT_FILENAME: 'AGENT.md',
+  AGENT_CONFIG_DIR: '.agent',
 }));
 
 vi.mock('../core/contentGenerator.js', async (importOriginal) => {
@@ -52,8 +52,8 @@ vi.mock('../core/contentGenerator.js', async (importOriginal) => {
 });
 
 vi.mock('../core/client.js', () => ({
-  GeminiClient: vi.fn().mockImplementation(() => ({
-    // Mock any methods on GeminiClient that might be used.
+  AgentClient: vi.fn().mockImplementation(() => ({
+    // Mock any methods on AgentClient that might be used.
   })),
 }));
 
@@ -66,10 +66,10 @@ vi.mock('../telemetry/index.js', async (importOriginal) => {
 });
 
 describe('Server Config (config.ts)', () => {
-  const MODEL = 'gemini-pro';
+  const MODEL = 'agent-pro';
   const SANDBOX: SandboxConfig = {
     command: 'docker',
-    image: 'gemini-cli-sandbox',
+    image: 'agent-cli-sandbox',
   };
   const TARGET_DIR = '/path/to/target';
   const DEBUG_MODE = false;
@@ -77,7 +77,7 @@ describe('Server Config (config.ts)', () => {
   const FULL_CONTEXT = false;
   const USER_MEMORY = 'Test User Memory';
   const TELEMETRY_SETTINGS = { enabled: false };
-  const EMBEDDING_MODEL = 'gemini-embedding';
+  const EMBEDDING_MODEL = 'agent-embedding';
   const SESSION_ID = 'test-session-id';
   const baseParams: ConfigParameters = {
     cwd: '/tmp',
@@ -102,8 +102,8 @@ describe('Server Config (config.ts)', () => {
   // describe('refreshAuth', () => {
   //   it('should refresh auth and update config', async () => {
   //     const config = new Config(baseParams);
-  //     const newModel = 'gemini-ultra';
-  //     const authType = AuthType.USE_GEMINI;
+  //     const newModel = 'agent-ultra';
+  //     const authType = AuthType.USE_AGENT;
   //     const mockContentConfig = {
   //       model: newModel,
   //       apiKey: 'test-key',
@@ -120,7 +120,7 @@ describe('Server Config (config.ts)', () => {
   //       authType,
   //     );
   //     expect(config.getContentGeneratorConfig()).toEqual(mockContentConfig);
-  //     expect(GeminiClient).toHaveBeenCalledWith(config);
+  //     expect(AgentClient).toHaveBeenCalledWith(config);
   //   });
   // });
 
@@ -140,19 +140,19 @@ describe('Server Config (config.ts)', () => {
     expect(config.getUserMemory()).toBe('');
   });
 
-  it('Config constructor should call setGeminiMdFilename with contextFileName if provided', () => {
+  it('Config constructor should call setAgentMdFilename with contextFileName if provided', () => {
     const contextFileName = 'CUSTOM_AGENTS.md';
     const paramsWithContextFile: ConfigParameters = {
       ...baseParams,
       contextFileName,
     };
     new Config(paramsWithContextFile);
-    expect(mockSetGeminiMdFilename).toHaveBeenCalledWith(contextFileName);
+    expect(mockSetAgentMdFilename).toHaveBeenCalledWith(contextFileName);
   });
 
-  it('Config constructor should not call setGeminiMdFilename if contextFileName is not provided', () => {
+  it('Config constructor should not call setAgentMdFilename if contextFileName is not provided', () => {
     new Config(baseParams); // baseParams does not have contextFileName
-    expect(mockSetGeminiMdFilename).not.toHaveBeenCalled();
+    expect(mockSetAgentMdFilename).not.toHaveBeenCalled();
   });
 
   it('should set default file filtering settings when not provided', () => {

@@ -34,7 +34,7 @@ describe('contentGenerator', () => {
     const generator = await createContentGenerator({
       model: 'test-model',
       apiKey: 'test-api-key',
-      authType: AuthType.USE_GEMINI,
+      authType: AuthType.USE_AGENT,
     });
     expect(GoogleGenAI).toHaveBeenCalledWith({
       apiKey: 'test-api-key',

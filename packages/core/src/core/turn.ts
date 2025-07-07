@@ -22,7 +22,7 @@ import {
   UnauthorizedError,
   toFriendlyError,
 } from '../utils/errors.js';
-import { GeminiChat } from './geminiChat.js';
+import { AgentChat } from './agentChat.js';
 
 // Define a structure for tools passed to the server
 export interface ServerTool {
@@ -39,7 +39,7 @@ export interface ServerTool {
   ): Promise<ToolCallConfirmationDetails | false>;
 }
 
-export enum GeminiEventType {
+export enum AgentEventType {
   Content = 'content',
   ToolCallRequest = 'tool_call_request',
   ToolCallResponse = 'tool_call_response',
@@ -55,7 +55,7 @@ export interface StructuredError {
   status?: number;
 }
 
-export interface GeminiErrorEventValue {
+export interface AgentErrorEventValue {
   error: StructuredError;
 }
 
@@ -83,38 +83,38 @@ export type ThoughtSummary = {
   description: string;
 };
 
-export type ServerGeminiContentEvent = {
-  type: GeminiEventType.Content;
+export type ServerAgentContentEvent = {
+  type: AgentEventType.Content;
   value: string;
 };
 
-export type ServerGeminiThoughtEvent = {
-  type: GeminiEventType.Thought;
+export type ServerAgentThoughtEvent = {
+  type: AgentEventType.Thought;
   value: ThoughtSummary;
 };
 
-export type ServerGeminiToolCallRequestEvent = {
-  type: GeminiEventType.ToolCallRequest;
+export type ServerAgentToolCallRequestEvent = {
+  type: AgentEventType.ToolCallRequest;
   value: ToolCallRequestInfo;
 };
 
-export type ServerGeminiToolCallResponseEvent = {
-  type: GeminiEventType.ToolCallResponse;
+export type ServerAgentToolCallResponseEvent = {
+  type: AgentEventType.ToolCallResponse;
   value: ToolCallResponseInfo;
 };
 
-export type ServerGeminiToolCallConfirmationEvent = {
-  type: GeminiEventType.ToolCallConfirmation;
+export type ServerAgentToolCallConfirmationEvent = {
+  type: AgentEventType.ToolCallConfirmation;
   value: ServerToolCallConfirmationDetails;
 };
 
-export type ServerGeminiUserCancelledEvent = {
-  type: GeminiEventType.UserCancelled;
+export type ServerAgentUserCancelledEvent = {
+  type: AgentEventType.UserCancelled;
 };
 
-export type ServerGeminiErrorEvent = {
-  type: GeminiEventType.Error;
-  value: GeminiErrorEventValue;
+export type ServerAgentErrorEvent = {
+  type: AgentEventType.Error;
+  value: AgentErrorEventValue;
 };
 
 export interface ChatCompressionInfo {
@@ -122,28 +122,28 @@ export interface ChatCompressionInfo {
   newTokenCount: number;
 }
 
-export type ServerGeminiChatCompressedEvent = {
-  type: GeminiEventType.ChatCompressed;
+export type ServerAgentChatCompressedEvent = {
+  type: AgentEventType.ChatCompressed;
   value: ChatCompressionInfo | null;
 };
 
 // The original union type, now composed of the individual types
-export type ServerGeminiStreamEvent =
-  | ServerGeminiContentEvent
-  | ServerGeminiToolCallRequestEvent
-  | ServerGeminiToolCallResponseEvent
-  | ServerGeminiToolCallConfirmationEvent
-  | ServerGeminiUserCancelledEvent
-  | ServerGeminiErrorEvent
-  | ServerGeminiChatCompressedEvent
-  | ServerGeminiThoughtEvent;
+export type ServerAgentStreamEvent =
+  | ServerAgentContentEvent
+  | ServerAgentToolCallRequestEvent
+  | ServerAgentToolCallResponseEvent
+  | ServerAgentToolCallConfirmationEvent
+  | ServerAgentUserCancelledEvent
+  | ServerAgentErrorEvent
+  | ServerAgentChatCompressedEvent
+  | ServerAgentThoughtEvent;
 
 // A turn manages the agentic loop turn within the server context.
 export class Turn {
   readonly pendingToolCalls: ToolCallRequestInfo[];
   private debugResponses: GenerateContentResponse[];
 
-  constructor(private readonly chat: GeminiChat) {
+  constructor(private readonly chat: AgentChat) {
     this.pendingToolCalls = [];
     this.debugResponses = [];
   }
@@ -151,7 +151,7 @@ export class Turn {
   async *run(
     req: PartListUnion,
     signal: AbortSignal,
-  ): AsyncGenerator<ServerGeminiStreamEvent> {
+  ): AsyncGenerator<ServerAgentStreamEvent> {
     try {
       const responseStream = await this.chat.sendMessageStream({
         message: req,
@@ -162,7 +162,7 @@ export class Turn {
 
       for await (const resp of responseStream) {
         if (signal?.aborted) {
-          yield { type: GeminiEventType.UserCancelled };
+          yield { type: AgentEventType.UserCancelled };
           // Do not add resp to debugResponses if aborted before processing
           return;
         }
@@ -184,7 +184,7 @@ export class Turn {
           };
 
           yield {
-            type: GeminiEventType.Thought,
+            type: AgentEventType.Thought,
             value: thought,
           };
           continue;
@@ -192,7 +192,7 @@ export class Turn {
 
         const text = getResponseText(resp);
         if (text) {
-          yield { type: GeminiEventType.Content, value: text };
+          yield { type: AgentEventType.Content, value: text };
         }
 
         // Handle function calls (requesting tool execution)
@@ -210,7 +210,7 @@ export class Turn {
         throw error;
       }
       if (signal.aborted) {
-        yield { type: GeminiEventType.UserCancelled };
+        yield { type: AgentEventType.UserCancelled };
         // Regular cancellation error, fail gracefully.
         return;
       }
@@ -218,7 +218,7 @@ export class Turn {
       const contextForReport = [...this.chat.getHistory(/*curated*/ true), req];
       await reportError(
         error,
-        'Error when talking to Gemini API',
+        'Error when talking to Agent API',
         contextForReport,
         'Turn.run-sendMessageStream',
       );
@@ -233,14 +233,14 @@ export class Turn {
         message: getErrorMessage(error),
         status,
       };
-      yield { type: GeminiEventType.Error, value: { error: structuredError } };
+      yield { type: AgentEventType.Error, value: { error: structuredError } };
       return;
     }
   }
 
   private handlePendingFunctionCall(
     fnCall: FunctionCall,
-  ): ServerGeminiStreamEvent | null {
+  ): ServerAgentStreamEvent | null {
     const callId =
       fnCall.id ??
       `${fnCall.name}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -257,7 +257,7 @@ export class Turn {
     this.pendingToolCalls.push(toolCallRequest);
 
     // Yield a request for the tool call, not the pending/confirming status
-    return { type: GeminiEventType.ToolCallRequest, value: toolCallRequest };
+    return { type: AgentEventType.ToolCallRequest, value: toolCallRequest };
   }
 
   getDebugResponses(): GenerateContentResponse[] {

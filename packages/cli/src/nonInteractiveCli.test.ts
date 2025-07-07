@@ -7,17 +7,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { runNonInteractive } from './nonInteractiveCli.js';
-import { Config, GeminiClient, ToolRegistry } from '@google/gemini-cli-core';
-import { GenerateContentResponse, Part, FunctionCall } from '@google/genai';
+import { Config, AgentClient, ToolRegistry } from '@zartosht/agent-cli-core';
 
 // Mock dependencies
-vi.mock('@google/gemini-cli-core', async () => {
+vi.mock('@zartosht/agent-cli-core', async () => {
   const actualCore = await vi.importActual<
-    typeof import('@google/gemini-cli-core')
-  >('@google/gemini-cli-core');
+    typeof import('@zartosht/agent-cli-core')
+  >('@zartosht/agent-cli-core');
   return {
     ...actualCore,
-    GeminiClient: vi.fn(),
+    AgentClient: vi.fn(),
     ToolRegistry: vi.fn(),
     executeToolCall: vi.fn(),
   };
@@ -25,7 +24,7 @@ vi.mock('@google/gemini-cli-core', async () => {
 
 describe('runNonInteractive', () => {
   let mockConfig: Config;
-  let mockGeminiClient: GeminiClient;
+  let mockAgentClient: AgentClient;
   let mockToolRegistry: ToolRegistry;
   let mockChat: {
     sendMessageStream: ReturnType<typeof vi.fn>;
@@ -38,20 +37,20 @@ describe('runNonInteractive', () => {
     mockChat = {
       sendMessageStream: vi.fn(),
     };
-    mockGeminiClient = {
+    mockAgentClient = {
       getChat: vi.fn().mockResolvedValue(mockChat),
-    } as unknown as GeminiClient;
+    } as unknown as AgentClient;
     mockToolRegistry = {
       getFunctionDeclarations: vi.fn().mockReturnValue([]),
       getTool: vi.fn(),
     } as unknown as ToolRegistry;
 
-    vi.mocked(GeminiClient).mockImplementation(() => mockGeminiClient);
+    vi.mocked(AgentClient).mockImplementation(() => mockAgentClient);
     vi.mocked(ToolRegistry).mockImplementation(() => mockToolRegistry);
 
     mockConfig = {
       getToolRegistry: vi.fn().mockReturnValue(mockToolRegistry),
-      getGeminiClient: vi.fn().mockReturnValue(mockGeminiClient),
+      getAgentClient: vi.fn().mockReturnValue(mockAgentClient),
       getContentGeneratorConfig: vi.fn().mockReturnValue({}),
     } as unknown as Config;
 
@@ -109,7 +108,7 @@ describe('runNonInteractive', () => {
     };
 
     const { executeToolCall: mockCoreExecuteToolCall } = await import(
-      '@google/gemini-cli-core'
+      '@zartosht/agent-cli-core'
     );
     vi.mocked(mockCoreExecuteToolCall).mockResolvedValue({
       callId: 'fc1',
@@ -162,7 +161,7 @@ describe('runNonInteractive', () => {
     };
 
     const { executeToolCall: mockCoreExecuteToolCall } = await import(
-      '@google/gemini-cli-core'
+      '@zartosht/agent-cli-core'
     );
     vi.mocked(mockCoreExecuteToolCall).mockResolvedValue({
       callId: 'fcError',
@@ -234,7 +233,7 @@ describe('runNonInteractive', () => {
     };
 
     const { executeToolCall: mockCoreExecuteToolCall } = await import(
-      '@google/gemini-cli-core'
+      '@zartosht/agent-cli-core'
     );
     vi.mocked(mockCoreExecuteToolCall).mockResolvedValue({
       callId: 'fcNotFound',

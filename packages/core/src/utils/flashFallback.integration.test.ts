@@ -13,7 +13,7 @@ import {
   createSimulated429Error,
   resetRequestCounter,
 } from './testUtils.js';
-import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
+import { DEFAULT_AGENT_FLASH_MODEL } from '../config/models.js';
 import { retryWithBackoff } from './retry.js';
 import { AuthType } from '../core/contentGenerator.js';
 
@@ -26,7 +26,7 @@ describe('Flash Fallback Integration', () => {
       targetDir: '/test',
       debugMode: false,
       cwd: '/test',
-      model: 'gemini-2.5-pro',
+      model: 'agent-2.5-pro',
     });
 
     // Reset simulation state for each test
@@ -42,8 +42,8 @@ describe('Flash Fallback Integration', () => {
 
     // Call the handler directly to test
     const result = await config.flashFallbackHandler!(
-      'gemini-2.5-pro',
-      DEFAULT_GEMINI_FLASH_MODEL,
+      'agent-2.5-pro',
+      DEFAULT_AGENT_FLASH_MODEL,
     );
 
     // Verify it automatically accepts
@@ -64,7 +64,7 @@ describe('Flash Fallback Integration', () => {
     // Mock fallback handler
     const mockFallbackHandler = vi.fn(async (_authType?: string) => {
       fallbackCalled = true;
-      fallbackModel = DEFAULT_GEMINI_FLASH_MODEL;
+      fallbackModel = DEFAULT_AGENT_FLASH_MODEL;
       return fallbackModel;
     });
 
@@ -83,7 +83,7 @@ describe('Flash Fallback Integration', () => {
 
     // Verify fallback was triggered
     expect(fallbackCalled).toBe(true);
-    expect(fallbackModel).toBe(DEFAULT_GEMINI_FLASH_MODEL);
+    expect(fallbackModel).toBe(DEFAULT_AGENT_FLASH_MODEL);
     expect(mockFallbackHandler).toHaveBeenCalledWith(
       AuthType.LOGIN_WITH_GOOGLE,
     );
@@ -101,7 +101,7 @@ describe('Flash Fallback Integration', () => {
     // Mock fallback handler
     const mockFallbackHandler = vi.fn(async () => {
       fallbackCalled = true;
-      return DEFAULT_GEMINI_FLASH_MODEL;
+      return DEFAULT_AGENT_FLASH_MODEL;
     });
 
     // Test with API key auth type - should not trigger fallback
@@ -115,7 +115,7 @@ describe('Flash Fallback Integration', () => {
           return status === 429;
         },
         onPersistent429: mockFallbackHandler,
-        authType: AuthType.USE_GEMINI, // API key auth type
+        authType: AuthType.USE_AGENT, // API key auth type
       });
     } catch (error) {
       // Expected to throw after max attempts

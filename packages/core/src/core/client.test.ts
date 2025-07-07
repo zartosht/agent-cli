@@ -12,13 +12,13 @@ import {
   GenerateContentResponse,
   GoogleGenAI,
 } from '@google/genai';
-import { GeminiClient } from './client.js';
+import { AgentClient } from './client.js';
 import { AuthType, ContentGenerator } from './contentGenerator.js';
-import { GeminiChat } from './geminiChat.js';
+import { AgentChat } from './agentChat.js';
 import { Config } from '../config/config.js';
 import { Turn } from './turn.js';
 import { getCoreSystemPrompt } from './prompts.js';
-import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
+import { DEFAULT_AGENT_FLASH_MODEL } from '../config/models.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { setSimulate429 } from '../utils/testUtils.js';
 import { tokenLimit } from './tokenLimits.js';
@@ -65,8 +65,8 @@ vi.mock('../telemetry/index.js', () => ({
   logApiError: vi.fn(),
 }));
 
-describe('Gemini Client (client.ts)', () => {
-  let client: GeminiClient;
+describe('Agent Client (client.ts)', () => {
+  let client: AgentClient;
   beforeEach(async () => {
     vi.resetAllMocks();
 
@@ -97,7 +97,7 @@ describe('Gemini Client (client.ts)', () => {
       ],
     } as unknown as GenerateContentResponse);
 
-    // Because the GeminiClient constructor kicks off an async process (startChat)
+    // Because the AgentClient constructor kicks off an async process (startChat)
     // that depends on a fully-formed Config object, we need to mock the
     // entire implementation of Config for these tests.
     const mockToolRegistry = {
@@ -110,7 +110,7 @@ describe('Gemini Client (client.ts)', () => {
       model: 'test-model',
       apiKey: 'test-key',
       vertexai: false,
-      authType: AuthType.USE_GEMINI,
+      authType: AuthType.USE_AGENT,
     };
     MockedConfig.mockImplementation(() => {
       const mock = {
@@ -136,7 +136,7 @@ describe('Gemini Client (client.ts)', () => {
     // We can instantiate the client here since Config is mocked
     // and the constructor will use the mocked GoogleGenAI
     const mockConfig = new Config({} as never);
-    client = new GeminiClient(mockConfig);
+    client = new AgentClient(mockConfig);
     await client.initialize(contentGeneratorConfig);
   });
 
@@ -146,10 +146,10 @@ describe('Gemini Client (client.ts)', () => {
 
   // NOTE: The following tests for startChat were removed due to persistent issues with
   // the @google/genai mock. Specifically, the mockChatCreateFn (representing instance.chats.create)
-  // was not being detected as called by the GeminiClient instance.
+  // was not being detected as called by the AgentClient instance.
   // This likely points to a subtle issue in how the GoogleGenerativeAI class constructor
   // and its instance methods are mocked and then used by the class under test.
-  // For future debugging, ensure that the `this.client` in `GeminiClient` (which is an
+  // For future debugging, ensure that the `this.client` in `AgentClient` (which is an
   // instance of the mocked GoogleGenerativeAI) correctly has its `chats.create` method
   // pointing to `mockChatCreateFn`.
   // it('startChat should call getCoreSystemPrompt with userMemory and pass to chats.create', async () => { ... });
@@ -159,7 +159,7 @@ describe('Gemini Client (client.ts)', () => {
   // the @google/genai mock, similar to the startChat tests. The mockGenerateContentFn
   // (representing instance.models.generateContent) was not being detected as called, or the mock
   // was not preventing an actual API call (leading to API key errors).
-  // For future debugging, ensure `this.client.models.generateContent` in `GeminiClient` correctly
+  // For future debugging, ensure `this.client.models.generateContent` in `AgentClient` correctly
   // uses the `mockGenerateContentFn`.
   // it('generateJson should call getCoreSystemPrompt with userMemory and pass to generateContent', async () => { ... });
   // it('generateJson should call getCoreSystemPrompt with empty string if userMemory is empty', async () => { ... });
@@ -302,7 +302,7 @@ describe('Gemini Client (client.ts)', () => {
       await client.generateJson(contents, schema, abortSignal);
 
       expect(mockGenerateContentFn).toHaveBeenCalledWith({
-        model: DEFAULT_GEMINI_FLASH_MODEL,
+        model: DEFAULT_AGENT_FLASH_MODEL,
         config: {
           abortSignal,
           systemInstruction: getCoreSystemPrompt(''),
@@ -377,7 +377,7 @@ describe('Gemini Client (client.ts)', () => {
       client['contentGenerator'] = mockGenerator as ContentGenerator;
 
       // Mock the chat's sendMessage method
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AgentChat> = {
         getHistory: vi
           .fn()
           .mockReturnValue([
@@ -386,7 +386,7 @@ describe('Gemini Client (client.ts)', () => {
         addHistory: vi.fn(),
         sendMessage: mockSendMessage,
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AgentChat;
     });
 
     it('should not trigger summarization if token count is below threshold', async () => {
@@ -478,11 +478,11 @@ describe('Gemini Client (client.ts)', () => {
       })();
       mockTurnRunFn.mockReturnValue(mockStream);
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AgentChat> = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AgentChat;
 
       const mockGenerator: Partial<ContentGenerator> = {
         countTokens: vi.fn().mockResolvedValue({ totalTokens: 0 }),
@@ -526,11 +526,11 @@ describe('Gemini Client (client.ts)', () => {
       })();
       mockTurnRunFn.mockReturnValue(mockStream);
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AgentChat> = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AgentChat;
 
       const mockGenerator: Partial<ContentGenerator> = {
         countTokens: vi.fn().mockResolvedValue({ totalTokens: 0 }),
@@ -625,11 +625,11 @@ describe('Gemini Client (client.ts)', () => {
       })();
       mockTurnRunFn.mockReturnValue(mockStream);
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AgentChat> = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AgentChat;
 
       const mockGenerator: Partial<ContentGenerator> = {
         countTokens: vi.fn().mockResolvedValue({ totalTokens: 0 }),
@@ -733,7 +733,7 @@ describe('Gemini Client (client.ts)', () => {
         { role: 'model', parts: [{ text: 'Long response' }] },
       ];
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AgentChat> = {
         getHistory: vi.fn().mockReturnValue(mockChatHistory),
         sendMessage: mockSendMessage,
       };
@@ -749,7 +749,7 @@ describe('Gemini Client (client.ts)', () => {
         .mockReturnValueOnce(firstCurrentModel)
         .mockReturnValueOnce(secondCurrentModel);
 
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AgentChat;
       client['contentGenerator'] = mockGenerator as ContentGenerator;
       client['startChat'] = vi.fn().mockResolvedValue(mockChat);
 
@@ -775,7 +775,7 @@ describe('Gemini Client (client.ts)', () => {
   describe('handleFlashFallback', () => {
     it('should use current model from config when checking for fallback', async () => {
       const initialModel = client['config'].getModel();
-      const fallbackModel = DEFAULT_GEMINI_FLASH_MODEL;
+      const fallbackModel = DEFAULT_AGENT_FLASH_MODEL;
 
       // mock config been changed
       const currentModel = initialModel + '-changed';

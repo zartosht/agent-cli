@@ -67,8 +67,8 @@ import {
   MCPServerStatus,
   getMCPDiscoveryState,
   getMCPServerStatus,
-  GeminiClient,
-} from '@google/gemini-cli-core';
+  AgentClient,
+} from '@zartosht/agent-cli-core';
 import { useSessionStats } from '../contexts/SessionContext.js';
 import { LoadedSettings } from '../../config/settings.js';
 import * as ShowMemoryCommandModule from './useShowMemoryCommand.js';
@@ -100,7 +100,7 @@ describe('useSlashCommandProcessor', () => {
   let mockPerformMemoryRefresh: ReturnType<typeof vi.fn>;
   let mockSetQuittingMessages: ReturnType<typeof vi.fn>;
   let mockTryCompressChat: ReturnType<typeof vi.fn>;
-  let mockGeminiClient: GeminiClient;
+  let mockAgentClient: AgentClient;
   let mockConfig: Config;
   let mockCorgiMode: ReturnType<typeof vi.fn>;
   const mockUseSessionStats = useSessionStats as Mock;
@@ -118,12 +118,12 @@ describe('useSlashCommandProcessor', () => {
     mockPerformMemoryRefresh = vi.fn().mockResolvedValue(undefined);
     mockSetQuittingMessages = vi.fn();
     mockTryCompressChat = vi.fn();
-    mockGeminiClient = {
+    mockAgentClient = {
       tryCompressChat: mockTryCompressChat,
-    } as unknown as GeminiClient;
+    } as unknown as AgentClient;
     mockConfig = {
       getDebugMode: vi.fn(() => false),
-      getGeminiClient: () => mockGeminiClient,
+      getAgentClient: () => mockAgentClient,
       getSandbox: vi.fn(() => 'test-sandbox'),
       getModel: vi.fn(() => 'test-model'),
       getProjectRoot: vi.fn(() => '/test/dir'),
@@ -156,7 +156,7 @@ describe('useSlashCommandProcessor', () => {
   const getProcessorHook = (showToolDescriptions: boolean = false) => {
     const settings = {
       merged: {
-        contextFileName: 'GEMINI.md',
+        contextFileName: 'AGENT.md',
       },
     } as LoadedSettings;
     return renderHook(() =>
@@ -367,14 +367,14 @@ describe('useSlashCommandProcessor', () => {
     it('should show the about box with all details including auth and project', async () => {
       // Arrange
       mockGetCliVersionFn.mockResolvedValue('test-version');
-      process.env.SANDBOX = 'gemini-sandbox';
+      process.env.SANDBOX = 'agent-sandbox';
       process.env.GOOGLE_CLOUD_PROJECT = 'test-gcp-project';
       vi.mocked(mockConfig.getModel).mockReturnValue('test-model-from-config');
 
       const settings = {
         merged: {
           selectedAuthType: 'test-auth-type',
-          contextFileName: 'GEMINI.md',
+          contextFileName: 'AGENT.md',
         },
       } as LoadedSettings;
 
@@ -412,7 +412,7 @@ describe('useSlashCommandProcessor', () => {
           type: 'about',
           cliVersion: 'test-version',
           osVersion: 'test-platform',
-          sandboxEnv: 'gemini-sandbox',
+          sandboxEnv: 'agent-sandbox',
           modelVersion: 'test-model-from-config',
           selectedAuthType: 'test-auth-type',
           gcpProject: 'test-gcp-project',
@@ -461,7 +461,7 @@ describe('useSlashCommandProcessor', () => {
       const mockResetChat = vi.fn();
       mockConfig = {
         ...mockConfig,
-        getGeminiClient: () => ({
+        getAgentClient: () => ({
           resetChat: mockResetChat,
         }),
       } as unknown as Config;
@@ -510,7 +510,7 @@ describe('useSlashCommandProcessor', () => {
       const osVersion = 'test-platform test-node-version';
       let sandboxEnvStr = 'no sandbox';
       if (sandboxEnvVar && sandboxEnvVar !== 'sandbox-exec') {
-        sandboxEnvStr = sandboxEnvVar.replace(/^gemini-(?:code-)?/, '');
+        sandboxEnvStr = sandboxEnvVar.replace(/^agent-(?:code-)?/, '');
       } else if (sandboxEnvVar === 'sandbox-exec') {
         sandboxEnvStr = `sandbox-exec (${seatbeltProfileVar || 'unknown'})`;
       }
@@ -527,7 +527,7 @@ describe('useSlashCommandProcessor', () => {
 *   **Memory Usage:** ${memoryUsage}
 `;
       let url =
-        'https://github.com/google-gemini/gemini-cli/issues/new?template=bug_report.yml';
+        'https://github.com/google-agent/agent-cli/issues/new?template=bug_report.yml';
       if (description) {
         url += `&title=${encodeURIComponent(description)}`;
       }
@@ -537,7 +537,7 @@ describe('useSlashCommandProcessor', () => {
 
     it('should call open with the correct GitHub issue URL and return true', async () => {
       mockGetCliVersionFn.mockResolvedValue('test-version');
-      process.env.SANDBOX = 'gemini-sandbox';
+      process.env.SANDBOX = 'agent-sandbox';
       process.env.SEATBELT_PROFILE = 'test_profile';
       const { handleSlashCommand } = getProcessor();
       const bugDescription = 'This is a test bug';
@@ -705,8 +705,8 @@ describe('useSlashCommandProcessor', () => {
       expect(commandResult).toBe(true);
     });
 
-    it('should display only Gemini CLI tools (filtering out MCP tools)', async () => {
-      // Create mock tools - some with serverName property (MCP tools) and some without (Gemini CLI tools)
+    it('should display only Agent CLI tools (filtering out MCP tools)', async () => {
+      // Create mock tools - some with serverName property (MCP tools) and some without (Agent CLI tools)
       const mockTools = [
         { name: 'tool1', displayName: 'Tool1' },
         { name: 'tool2', displayName: 'Tool2' },
@@ -734,7 +734,7 @@ describe('useSlashCommandProcessor', () => {
       expect(commandResult).toBe(true);
     });
 
-    it('should display a message when no Gemini CLI tools are available', async () => {
+    it('should display a message when no Agent CLI tools are available', async () => {
       // Only MCP tools available
       const mockTools = [
         { name: 'mcp_tool1', serverName: 'mcp-server1' },
@@ -798,7 +798,7 @@ describe('useSlashCommandProcessor', () => {
   describe('/mcp command', () => {
     beforeEach(() => {
       // Mock the core module with getMCPServerStatus and getMCPDiscoveryState
-      vi.mock('@google/gemini-cli-core', async (importOriginal) => {
+      vi.mock('@zartosht/agent-cli-core', async (importOriginal) => {
         const actual = await importOriginal();
         return {
           ...actual,
@@ -860,7 +860,7 @@ describe('useSlashCommandProcessor', () => {
         2,
         expect.objectContaining({
           type: MessageType.INFO,
-          text: `No MCP servers configured. Please open the following URL in your browser to view documentation:\nhttps://goo.gle/gemini-cli-docs-mcp`,
+          text: `No MCP servers configured. Please open the following URL in your browser to view documentation:\nhttps://goo.gle/agent-cli-docs-mcp`,
         }),
         expect.any(Number),
       );
@@ -887,11 +887,11 @@ describe('useSlashCommandProcessor', () => {
         2,
         expect.objectContaining({
           type: MessageType.INFO,
-          text: 'No MCP servers configured. Opening documentation in your browser: https://goo.gle/gemini-cli-docs-mcp',
+          text: 'No MCP servers configured. Opening documentation in your browser: https://goo.gle/agent-cli-docs-mcp',
         }),
         expect.any(Number),
       );
-      expect(open).toHaveBeenCalledWith('https://goo.gle/gemini-cli-docs-mcp');
+      expect(open).toHaveBeenCalledWith('https://goo.gle/agent-cli-docs-mcp');
       expect(commandResult).toBe(true);
     });
 
@@ -1290,7 +1290,7 @@ describe('useSlashCommandProcessor', () => {
         hook.rerender();
       });
       expect(hook.result.current.pendingHistoryItems).toEqual([]);
-      expect(mockGeminiClient.tryCompressChat).toHaveBeenCalledWith(true);
+      expect(mockAgentClient.tryCompressChat).toHaveBeenCalledWith(true);
       expect(mockAddItem).toHaveBeenNthCalledWith(
         2,
         expect.objectContaining({

@@ -7,35 +7,35 @@
 import React from 'react';
 import { Text } from 'ink';
 import { Colors } from '../colors.js';
-import { type MCPServerConfig } from '@google/gemini-cli-core';
+import { type MCPServerConfig } from '@zartosht/agent-cli-core';
 
 interface ContextSummaryDisplayProps {
-  geminiMdFileCount: number;
+  agentMdFileCount: number;
   contextFileNames: string[];
   mcpServers?: Record<string, MCPServerConfig>;
   showToolDescriptions?: boolean;
 }
 
 export const ContextSummaryDisplay: React.FC<ContextSummaryDisplayProps> = ({
-  geminiMdFileCount,
+  agentMdFileCount,
   contextFileNames,
   mcpServers,
   showToolDescriptions,
 }) => {
   const mcpServerCount = Object.keys(mcpServers || {}).length;
 
-  if (geminiMdFileCount === 0 && mcpServerCount === 0) {
+  if (agentMdFileCount === 0 && mcpServerCount === 0) {
     return <Text> </Text>; // Render an empty space to reserve height
   }
 
-  const geminiMdText = (() => {
-    if (geminiMdFileCount === 0) {
+  const agentMdText = (() => {
+    if (agentMdFileCount === 0) {
       return '';
     }
     const allNamesTheSame = new Set(contextFileNames).size < 2;
     const name = allNamesTheSame ? contextFileNames[0] : 'context';
-    return `${geminiMdFileCount} ${name} file${
-      geminiMdFileCount > 1 ? 's' : ''
+    return `${agentMdFileCount} ${name} file${
+      agentMdFileCount > 1 ? 's' : ''
     }`;
   })();
 
@@ -45,10 +45,10 @@ export const ContextSummaryDisplay: React.FC<ContextSummaryDisplayProps> = ({
       : '';
 
   let summaryText = 'Using ';
-  if (geminiMdText) {
-    summaryText += geminiMdText;
+  if (agentMdText) {
+    summaryText += agentMdText;
   }
-  if (geminiMdText && mcpText) {
+  if (agentMdText && mcpText) {
     summaryText += ' and ';
   }
   if (mcpText) {

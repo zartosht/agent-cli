@@ -15,7 +15,7 @@ import {
   SETTINGS_DIRECTORY_NAME,
 } from '../config/settings.js';
 import { promisify } from 'util';
-import { SandboxConfig } from '@google/gemini-cli-core';
+import { SandboxConfig } from '@zartosht/agent-cli-core';
 
 const execAsync = promisify(exec);
 
@@ -31,9 +31,9 @@ function getContainerPath(hostPath: string): string {
   return hostPath;
 }
 
-const LOCAL_DEV_SANDBOX_IMAGE_NAME = 'gemini-cli-sandbox';
-const SANDBOX_NETWORK_NAME = 'gemini-cli-sandbox';
-const SANDBOX_PROXY_NAME = 'gemini-cli-sandbox-proxy';
+const LOCAL_DEV_SANDBOX_IMAGE_NAME = 'agent-cli-sandbox';
+const SANDBOX_NETWORK_NAME = 'agent-cli-sandbox';
+const SANDBOX_PROXY_NAME = 'agent-cli-sandbox-proxy';
 const BUILTIN_SEATBELT_PROFILES = [
   'permissive-open',
   'permissive-closed',
@@ -172,8 +172,8 @@ function entrypoint(workdir: string): string[] {
         ? 'npm run debug --'
         : 'npm rebuild && npm run start --'
       : process.env.DEBUG
-        ? `node --inspect-brk=0.0.0.0:${process.env.DEBUG_PORT || '9229'} $(which gemini)`
-        : 'gemini';
+        ? `node --inspect-brk=0.0.0.0:${process.env.DEBUG_PORT || '9229'} $(which agent)`
+        : 'agent';
 
   const args = [...shellCmds, cliCmd, ...cliArgs];
 
@@ -233,8 +233,8 @@ export async function start_sandbox(
         ...process.argv.map((arg) => quote([arg])),
       ].join(' '),
     ];
-    // start and set up proxy if GEMINI_SANDBOX_PROXY_COMMAND is set
-    const proxyCommand = process.env.GEMINI_SANDBOX_PROXY_COMMAND;
+    // start and set up proxy if AGENT_SANDBOX_PROXY_COMMAND is set
+    const proxyCommand = process.env.AGENT_SANDBOX_PROXY_COMMAND;
     let proxyProcess: ChildProcess | undefined = undefined;
     let sandboxProcess: ChildProcess | undefined = undefined;
     const sandboxEnv = { ...process.env };
@@ -301,7 +301,7 @@ export async function start_sandbox(
 
   console.error(`hopping into sandbox (command: ${config.command}) ...`);
 
-  // determine full path for gemini-cli to distinguish linked vs installed setting
+  // determine full path for agent-cli to distinguish linked vs installed setting
   const gcPath = fs.realpathSync(process.argv[1]);
 
   const projectSandboxDockerfile = path.join(
@@ -314,14 +314,14 @@ export async function start_sandbox(
   const workdir = path.resolve(process.cwd());
   const containerWorkdir = getContainerPath(workdir);
 
-  // if BUILD_SANDBOX is set, then call scripts/build_sandbox.js under gemini-cli repo
+  // if BUILD_SANDBOX is set, then call scripts/build_sandbox.js under agent-cli repo
   //
-  // note this can only be done with binary linked from gemini-cli repo
+  // note this can only be done with binary linked from agent-cli repo
   if (process.env.BUILD_SANDBOX) {
-    if (!gcPath.includes('gemini-cli/packages/')) {
+    if (!gcPath.includes('agent-cli/packages/')) {
       console.error(
-        'ERROR: cannot build sandbox using installed gemini binary; ' +
-          'run `npm link ./packages/cli` under gemini-cli repo to switch to linked binary.',
+        'ERROR: cannot build sandbox using installed agent binary; ' +
+          'run `npm link ./packages/cli` under agent-cli repo to switch to linked binary.',
       );
       process.exit(1);
     } else {
@@ -343,7 +343,7 @@ export async function start_sandbox(
           stdio: 'inherit',
           env: {
             ...process.env,
-            GEMINI_SANDBOX: config.command, // in case sandbox is enabled via flags (see config.ts under cli package)
+            AGENT_SANDBOX: config.command, // in case sandbox is enabled via flags (see config.ts under cli package)
           },
         },
       );
@@ -354,8 +354,8 @@ export async function start_sandbox(
   if (!(await ensureSandboxImageIsPresent(config.command, image))) {
     const remedy =
       image === LOCAL_DEV_SANDBOX_IMAGE_NAME
-        ? 'Try running `npm run build:all` or `npm run build:sandbox` under the gemini-cli repo to build it locally, or check the image name and your network connection.'
-        : 'Please check the image name, your network connection, or notify gemini-cli-dev@google.com if the issue persists.';
+        ? 'Try running `npm run build:all` or `npm run build:sandbox` under the agent-cli repo to build it locally, or check the image name and your network connection.'
+        : 'Please check the image name, your network connection, or notify agent-cli-dev@google.com if the issue persists.';
     console.error(
       `ERROR: Sandbox image '${image}' is missing or could not be pulled. ${remedy}`,
     );
@@ -455,8 +455,8 @@ export async function start_sandbox(
 
   // copy proxy environment variables, replacing localhost with SANDBOX_PROXY_NAME
   // copy as both upper-case and lower-case as is required by some utilities
-  // GEMINI_SANDBOX_PROXY_COMMAND implies HTTPS_PROXY unless HTTP_PROXY is set
-  const proxyCommand = process.env.GEMINI_SANDBOX_PROXY_COMMAND;
+  // AGENT_SANDBOX_PROXY_COMMAND implies HTTPS_PROXY unless HTTP_PROXY is set
+  const proxyCommand = process.env.AGENT_SANDBOX_PROXY_COMMAND;
 
   if (proxyCommand) {
     let proxy =
@@ -509,9 +509,9 @@ export async function start_sandbox(
   const containerName = `${imageName}-${index}`;
   args.push('--name', containerName, '--hostname', containerName);
 
-  // copy GEMINI_API_KEY(s)
-  if (process.env.GEMINI_API_KEY) {
-    args.push('--env', `GEMINI_API_KEY=${process.env.GEMINI_API_KEY}`);
+  // copy AGENT_API_KEY(s)
+  if (process.env.AGENT_API_KEY) {
+    args.push('--env', `AGENT_API_KEY=${process.env.AGENT_API_KEY}`);
   }
   if (process.env.GOOGLE_API_KEY) {
     args.push('--env', `GOOGLE_API_KEY=${process.env.GOOGLE_API_KEY}`);
@@ -541,9 +541,9 @@ export async function start_sandbox(
     );
   }
 
-  // copy GEMINI_MODEL
-  if (process.env.GEMINI_MODEL) {
-    args.push('--env', `GEMINI_MODEL=${process.env.GEMINI_MODEL}`);
+  // copy AGENT_MODEL
+  if (process.env.AGENT_MODEL) {
+    args.push('--env', `AGENT_MODEL=${process.env.AGENT_MODEL}`);
   }
 
   // copy TERM and COLORTERM to try to maintain terminal setup
@@ -621,7 +621,7 @@ export async function start_sandbox(
   let userFlag = '';
   const finalEntrypoint = entrypoint(workdir);
 
-  if (process.env.GEMINI_CLI_INTEGRATION_TEST === 'true') {
+  if (process.env.AGENT_CLI_INTEGRATION_TEST === 'true') {
     args.push('--user', 'root');
     userFlag = '--user root';
   } else if (await shouldUseCurrentUserInSandbox()) {
@@ -634,10 +634,10 @@ export async function start_sandbox(
 
     // Instead of passing --user to the main sandbox container, we let it
     // start as root, then create a user with the host's UID/GID, and
-    // finally switch to that user to run the gemini process. This is
+    // finally switch to that user to run the agent process. This is
     // necessary on Linux to ensure the user exists within the
     // container's /etc/passwd file, which is required by os.userInfo().
-    const username = 'gemini';
+    const username = 'agent';
     const homeDir = getContainerPath(os.homedir());
 
     const setupUserCommands = [
@@ -668,7 +668,7 @@ export async function start_sandbox(
   // push container entrypoint (including args)
   args.push(...finalEntrypoint);
 
-  // start and set up proxy if GEMINI_SANDBOX_PROXY_COMMAND is set
+  // start and set up proxy if AGENT_SANDBOX_PROXY_COMMAND is set
   let proxyProcess: ChildProcess | undefined = undefined;
   let sandboxProcess: ChildProcess | undefined = undefined;
 

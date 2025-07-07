@@ -8,7 +8,7 @@ import { Box, Newline, Text, useInput } from 'ink';
 import { RadioButtonSelect } from '../components/shared/RadioButtonSelect.js';
 import { usePrivacySettings } from '../hooks/usePrivacySettings.js';
 import { CloudPaidPrivacyNotice } from './CloudPaidPrivacyNotice.js';
-import { Config } from '@google/gemini-cli-core';
+import { Config } from '@zartosht/agent-cli-core';
 import { Colors } from '../colors.js';
 
 interface CloudFreePrivacyNoticeProps {
@@ -56,17 +56,17 @@ export const CloudFreePrivacyNotice = ({
   return (
     <Box flexDirection="column" marginY={1}>
       <Text bold color={Colors.AccentPurple}>
-        Gemini Code Assist for Individuals Privacy Notice
+        Agent Code Assist for Individuals Privacy Notice
       </Text>
       <Newline />
       <Text>
         This notice and our Privacy Policy
-        <Text color={Colors.AccentBlue}>[1]</Text> describe how Gemini Code
+        <Text color={Colors.AccentBlue}>[1]</Text> describe how Agent Code
         Assist handles your data. Please read them carefully.
       </Text>
       <Newline />
       <Text>
-        When you use Gemini Code Assist for individuals with Gemini CLI, Google
+        When you use Agent Code Assist for individuals with Agent CLI, Google
         collects your prompts, related code, generated output, code edits,
         related feature usage information, and your feedback to provide,
         improve, and develop Google products and services and machine learning

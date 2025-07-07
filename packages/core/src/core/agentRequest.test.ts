@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { partListUnionToString } from './geminiRequest.js';
+import { partListUnionToString } from './agentRequest.js';
 import { type Part } from '@google/genai';
 
 describe('partListUnionToString', () => {

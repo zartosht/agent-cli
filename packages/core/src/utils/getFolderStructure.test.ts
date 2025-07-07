@@ -295,13 +295,13 @@ describe('getFolderStructure gitignore', () => {
           createDirent('file1.txt', 'file'),
           createDirent('node_modules', 'dir'),
           createDirent('ignored.txt', 'file'),
-          createDirent('.gemini', 'dir'),
+          createDirent('.agent', 'dir'),
         ] as any;
       }
       if (path === '/test/project/node_modules') {
         return [createDirent('some-package', 'dir')] as any;
       }
-      if (path === '/test/project/.gemini') {
+      if (path === '/test/project/.agent') {
         return [
           createDirent('config.yaml', 'file'),
           createDirent('logs.json', 'file'),
@@ -313,7 +313,7 @@ describe('getFolderStructure gitignore', () => {
     (fs.readFileSync as Mock).mockImplementation((p) => {
       const path = p.toString();
       if (path === '/test/project/.gitignore') {
-        return 'ignored.txt\nnode_modules/\n.gemini/\n!/.gemini/config.yaml';
+        return 'ignored.txt\nnode_modules/\n.agent/\n!/.agent/config.yaml';
       }
       return '';
     });

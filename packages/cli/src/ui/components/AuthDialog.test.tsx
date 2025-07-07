@@ -8,7 +8,7 @@ import { render } from 'ink-testing-library';
 import { describe, it, expect, vi } from 'vitest';
 import { AuthDialog } from './AuthDialog.js';
 import { LoadedSettings, SettingScope } from '../../config/settings.js';
-import { AuthType } from '@google/gemini-cli-core';
+import { AuthType } from '@zartosht/agent-cli-core';
 
 describe('AuthDialog', () => {
   const wait = (ms = 50) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -17,7 +17,7 @@ describe('AuthDialog', () => {
     const settings: LoadedSettings = new LoadedSettings(
       {
         settings: {
-          selectedAuthType: AuthType.USE_GEMINI,
+          selectedAuthType: AuthType.USE_AGENT,
         },
         path: '',
       },
@@ -32,12 +32,12 @@ describe('AuthDialog', () => {
       <AuthDialog
         onSelect={() => {}}
         settings={settings}
-        initialErrorMessage="GEMINI_API_KEY  environment variable not found"
+        initialErrorMessage="AGENT_API_KEY  environment variable not found"
       />,
     );
 
     expect(lastFrame()).toContain(
-      'GEMINI_API_KEY  environment variable not found',
+      'AGENT_API_KEY  environment variable not found',
     );
   });
 
@@ -79,7 +79,7 @@ describe('AuthDialog', () => {
     const settings: LoadedSettings = new LoadedSettings(
       {
         settings: {
-          selectedAuthType: AuthType.USE_GEMINI,
+          selectedAuthType: AuthType.USE_AGENT,
         },
         path: '',
       },

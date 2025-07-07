@@ -7,7 +7,7 @@
 import {
   ToolCallConfirmationDetails,
   ToolResultDisplay,
-} from '@google/gemini-cli-core';
+} from '@zartosht/agent-cli-core';
 
 // Only defining the state enum needed by the UI
 export enum StreamingState {
@@ -17,7 +17,7 @@ export enum StreamingState {
 }
 
 // Copied from server/src/core/turn.ts for CLI usage
-export enum GeminiEventType {
+export enum AgentEventType {
   Content = 'content',
   ToolCallRequest = 'tool_call_request',
   // Add other event types if the UI hook needs to handle them
@@ -59,7 +59,7 @@ export interface CompressionProps {
 }
 
 export interface HistoryItemBase {
-  text?: string; // Text content for user/gemini/info/error messages
+  text?: string; // Text content for user/agent/info/error messages
 }
 
 export type HistoryItemUser = HistoryItemBase & {
@@ -67,13 +67,13 @@ export type HistoryItemUser = HistoryItemBase & {
   text: string;
 };
 
-export type HistoryItemGemini = HistoryItemBase & {
-  type: 'gemini';
+export type HistoryItemAgent = HistoryItemBase & {
+  type: 'agent';
   text: string;
 };
 
-export type HistoryItemGeminiContent = HistoryItemBase & {
-  type: 'gemini_content';
+export type HistoryItemAgentContent = HistoryItemBase & {
+  type: 'agent_content';
   text: string;
 };
 
@@ -137,8 +137,8 @@ export type HistoryItemCompression = HistoryItemBase & {
 export type HistoryItemWithoutId =
   | HistoryItemUser
   | HistoryItemUserShell
-  | HistoryItemGemini
-  | HistoryItemGeminiContent
+  | HistoryItemAgent
+  | HistoryItemAgentContent
   | HistoryItemInfo
   | HistoryItemError
   | HistoryItemAbout
@@ -161,7 +161,7 @@ export enum MessageType {
   MODEL_STATS = 'model_stats',
   TOOL_STATS = 'tool_stats',
   QUIT = 'quit',
-  GEMINI = 'gemini',
+  AGENT = 'agent',
   COMPRESSION = 'compression',
 }
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AuthType } from '@google/gemini-cli-core';
+import { AuthType } from '@zartosht/agent-cli-core';
 import { loadEnvironment } from './settings.js';
 
 export const validateAuthMethod = (authMethod: string): string | null => {
@@ -13,9 +13,9 @@ export const validateAuthMethod = (authMethod: string): string | null => {
     return null;
   }
 
-  if (authMethod === AuthType.USE_GEMINI) {
-    if (!process.env.GEMINI_API_KEY) {
-      return 'GEMINI_API_KEY environment variable not found. Add that to your .env and try again, no reload needed!';
+  if (authMethod === AuthType.USE_AGENT) {
+    if (!process.env.AGENT_API_KEY) {
+      return 'AGENT_API_KEY environment variable not found. Add that to your .env and try again, no reload needed!';
     }
     return null;
   }

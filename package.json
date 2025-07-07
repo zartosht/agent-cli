@@ -1,5 +1,5 @@
 {
-  "name": "@google/gemini-cli",
+  "name": "@zartosht/agent-cli",
   "version": "0.1.9",
   "engines": {
     "node": ">=20.0.0"
@@ -11,10 +11,10 @@
   "private": "true",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/google-gemini/gemini-cli.git"
+    "url": "git+https://github.com/zartosht/agent-cli.git"
   },
   "config": {
-    "sandboxImageUri": "us-docker.pkg.dev/gemini-code-dev/gemini-cli/sandbox:0.1.9"
+    "sandboxImageUri": "us-docker.pkg.dev/agent-code-dev/agent-cli/sandbox:0.1.9"
   },
   "scripts": {
     "generate": "node scripts/generate-git-commit-info.js",
@@ -57,7 +57,7 @@
     "publish:actions-release": "npm run prepare:package && npm run build:packages && npm run publish:npm"
   },
   "bin": {
-    "gemini": "bundle/gemini.js"
+    "agent": "bundle/agent.js"
   },
   "files": [
     "bundle/",

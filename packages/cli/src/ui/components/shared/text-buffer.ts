@@ -11,7 +11,7 @@ import os from 'os';
 import pathMod from 'path';
 import { useState, useCallback, useEffect, useMemo, useReducer } from 'react';
 import stringWidth from 'string-width';
-import { unescapePath } from '@google/gemini-cli-core';
+import { unescapePath } from '@zartosht/agent-cli-core';
 import { toCodePoints, cpLen, cpSlice } from '../../utils/textUtils.js';
 
 export type Direction =
@@ -1116,7 +1116,7 @@ export function useTextBuffer({
         process.env['VISUAL'] ??
         process.env['EDITOR'] ??
         (process.platform === 'win32' ? 'notepad' : 'vi');
-      const tmpDir = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'gemini-edit-'));
+      const tmpDir = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'agent-edit-'));
       const filePath = pathMod.join(tmpDir, 'buffer.txt');
       fs.writeFileSync(filePath, text, 'utf8');
 

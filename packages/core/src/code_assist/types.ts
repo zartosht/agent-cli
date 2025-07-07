@@ -32,7 +32,7 @@ export type ClientMetadataPlatform =
 export type ClientMetadataPluginType =
   | 'PLUGIN_UNSPECIFIED'
   | 'CLOUD_CODE'
-  | 'GEMINI'
+  | 'AGENT'
   | 'AIPLUGIN_INTELLIJ'
   | 'AIPLUGIN_STUDIO';
 
@@ -46,16 +46,16 @@ export interface LoadCodeAssistRequest {
  * http://google3/google/internal/cloud/code/v1internal/cloudcode.proto;l=224
  */
 export interface LoadCodeAssistResponse {
-  currentTier?: GeminiUserTier | null;
-  allowedTiers?: GeminiUserTier[] | null;
+  currentTier?: AgentUserTier | null;
+  allowedTiers?: AgentUserTier[] | null;
   ineligibleTiers?: IneligibleTier[] | null;
   cloudaicompanionProject?: string | null;
 }
 
 /**
- * GeminiUserTier reflects the structure received from the CodeAssist when calling LoadCodeAssist.
+ * AgentUserTier reflects the structure received from the CodeAssist when calling LoadCodeAssist.
  */
-export interface GeminiUserTier {
+export interface AgentUserTier {
   id: UserTierId;
   name: string;
   description: string;
@@ -161,7 +161,7 @@ export enum OnboardUserStatusCode {
 }
 
 /**
- * Status of user onboarded to gemini
+ * Status of user onboarded to agent
  */
 export interface OnboardUserStatus {
   statusCode: OnboardUserStatusCode;

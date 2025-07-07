@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ThoughtSummary } from '@google/gemini-cli-core';
+import { ThoughtSummary } from '@zartosht/agent-cli-core';
 import React from 'react';
 import { Box, Text } from 'ink';
 import { Colors } from '../colors.js';
 import { useStreamingContext } from '../contexts/StreamingContext.js';
 import { StreamingState } from '../types.js';
-import { GeminiRespondingSpinner } from './GeminiRespondingSpinner.js';
+import { AgentRespondingSpinner } from './AgentRespondingSpinner.js';
 
 interface LoadingIndicatorProps {
   currentLoadingPhrase?: string;
@@ -38,7 +38,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
       {/* Main loading line */}
       <Box>
         <Box marginRight={1}>
-          <GeminiRespondingSpinner
+          <AgentRespondingSpinner
             nonRespondingDisplay={
               streamingState === StreamingState.WaitingForConfirmation
                 ? '⠏'

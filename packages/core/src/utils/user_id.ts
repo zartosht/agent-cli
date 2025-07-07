@@ -8,15 +8,15 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
-import { GEMINI_DIR } from './paths.js';
+import { AGENT_DIR } from './paths.js';
 
 const homeDir = os.homedir() ?? '';
-const geminiDir = path.join(homeDir, GEMINI_DIR);
-const installationIdFile = path.join(geminiDir, 'installation_id');
+const agentDir = path.join(homeDir, AGENT_DIR);
+const installationIdFile = path.join(agentDir, 'installation_id');
 
-function ensureGeminiDirExists() {
-  if (!fs.existsSync(geminiDir)) {
-    fs.mkdirSync(geminiDir, { recursive: true });
+function ensureAgentDirExists() {
+  if (!fs.existsSync(agentDir)) {
+    fs.mkdirSync(agentDir, { recursive: true });
   }
 }
 
@@ -39,7 +39,7 @@ function writeInstallationIdToFile(installationId: string) {
  */
 export function getInstallationId(): string {
   try {
-    ensureGeminiDirExists();
+    ensureAgentDirExists();
     let installationId = readInstallationIdFromFile();
 
     if (!installationId) {

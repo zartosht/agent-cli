@@ -7,11 +7,11 @@
 import { Box, Newline, Text, useInput } from 'ink';
 import { Colors } from '../colors.js';
 
-interface GeminiPrivacyNoticeProps {
+interface AgentPrivacyNoticeProps {
   onExit: () => void;
 }
 
-export const GeminiPrivacyNotice = ({ onExit }: GeminiPrivacyNoticeProps) => {
+export const AgentPrivacyNotice = ({ onExit }: AgentPrivacyNoticeProps) => {
   useInput((input, key) => {
     if (key.escape) {
       onExit();
@@ -21,24 +21,24 @@ export const GeminiPrivacyNotice = ({ onExit }: GeminiPrivacyNoticeProps) => {
   return (
     <Box flexDirection="column" marginBottom={1}>
       <Text bold color={Colors.AccentPurple}>
-        Gemini API Key Notice
+        Agent API Key Notice
       </Text>
       <Newline />
       <Text>
-        By using the Gemini API<Text color={Colors.AccentBlue}>[1]</Text>,
+        By using the Agent API<Text color={Colors.AccentBlue}>[1]</Text>,
         Google AI Studio
         <Text color={Colors.AccentRed}>[2]</Text>, and the other Google
         developer services that reference these terms (collectively, the
         &quot;APIs&quot; or &quot;Services&quot;), you are agreeing to Google
         APIs Terms of Service (the &quot;API Terms&quot;)
-        <Text color={Colors.AccentGreen}>[3]</Text>, and the Gemini API
+        <Text color={Colors.AccentGreen}>[3]</Text>, and the Agent API
         Additional Terms of Service (the &quot;Additional Terms&quot;)
         <Text color={Colors.AccentPurple}>[4]</Text>.
       </Text>
       <Newline />
       <Text>
         <Text color={Colors.AccentBlue}>[1]</Text>{' '}
-        https://ai.google.dev/docs/gemini_api_overview
+        https://ai.google.dev/docs/agent_api_overview
       </Text>
       <Text>
         <Text color={Colors.AccentRed}>[2]</Text> https://aistudio.google.com/
@@ -49,7 +49,7 @@ export const GeminiPrivacyNotice = ({ onExit }: GeminiPrivacyNoticeProps) => {
       </Text>
       <Text>
         <Text color={Colors.AccentPurple}>[4]</Text>{' '}
-        https://ai.google.dev/gemini-api/terms
+        https://ai.google.dev/agent-api/terms
       </Text>
       <Newline />
       <Text color={Colors.Gray}>Press Esc to exit.</Text>

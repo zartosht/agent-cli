@@ -5,8 +5,8 @@
  */
 
 import { Box } from 'ink';
-import { type Config, AuthType } from '@google/gemini-cli-core';
-import { GeminiPrivacyNotice } from './GeminiPrivacyNotice.js';
+import { type Config, AuthType } from '@zartosht/agent-cli-core';
+import { AgentPrivacyNotice } from './AgentPrivacyNotice.js';
 import { CloudPaidPrivacyNotice } from './CloudPaidPrivacyNotice.js';
 import { CloudFreePrivacyNotice } from './CloudFreePrivacyNotice.js';
 
@@ -25,8 +25,8 @@ const PrivacyNoticeText = ({
   const authType = config.getContentGeneratorConfig()?.authType;
 
   switch (authType) {
-    case AuthType.USE_GEMINI:
-      return <GeminiPrivacyNotice onExit={onExit} />;
+    case AuthType.USE_AGENT:
+      return <AgentPrivacyNotice onExit={onExit} />;
     case AuthType.USE_VERTEX_AI:
       return <CloudPaidPrivacyNotice onExit={onExit} />;
     case AuthType.LOGIN_WITH_GOOGLE:

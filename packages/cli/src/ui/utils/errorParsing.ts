@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AuthType, StructuredError } from '@google/gemini-cli-core';
+import { AuthType, StructuredError } from '@zartosht/agent-cli-core';
 
 const RATE_LIMIT_ERROR_MESSAGE_GOOGLE =
   '\nPlease wait and try again later. To increase your limits, upgrade to a plan with higher limits, or use /auth to switch to using a paid API key from AI Studio at https://aistudio.google.com/apikey';
-const RATE_LIMIT_ERROR_MESSAGE_USE_GEMINI =
+const RATE_LIMIT_ERROR_MESSAGE_USE_AGENT =
   '\nPlease wait and try again later. To increase your limits, request a quota increase through AI Studio, or switch to another /auth method';
 const RATE_LIMIT_ERROR_MESSAGE_VERTEX =
   '\nPlease wait and try again later. To increase your limits, request a quota increase through Vertex, or switch to another /auth method';
@@ -47,8 +47,8 @@ function getRateLimitMessage(authType?: AuthType): string {
   switch (authType) {
     case AuthType.LOGIN_WITH_GOOGLE:
       return RATE_LIMIT_ERROR_MESSAGE_GOOGLE;
-    case AuthType.USE_GEMINI:
-      return RATE_LIMIT_ERROR_MESSAGE_USE_GEMINI;
+    case AuthType.USE_AGENT:
+      return RATE_LIMIT_ERROR_MESSAGE_USE_AGENT;
     case AuthType.USE_VERTEX_AI:
       return RATE_LIMIT_ERROR_MESSAGE_VERTEX;
     default:

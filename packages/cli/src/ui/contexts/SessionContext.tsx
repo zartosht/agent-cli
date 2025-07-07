@@ -16,7 +16,7 @@ import {
   uiTelemetryService,
   SessionMetrics,
   ModelMetrics,
-} from '@google/gemini-cli-core';
+} from '@zartosht/agent-cli-core';
 
 // --- Interface Definitions ---
 

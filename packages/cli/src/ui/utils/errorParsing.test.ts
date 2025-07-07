@@ -6,12 +6,12 @@
 
 import { describe, it, expect } from 'vitest';
 import { parseAndFormatApiError } from './errorParsing.js';
-import { AuthType, StructuredError } from '@google/gemini-cli-core';
+import { AuthType, StructuredError } from '@zartosht/agent-cli-core';
 
 describe('parseAndFormatApiError', () => {
   const enterpriseMessage = 'upgrade to a plan with higher limits';
   const vertexMessage = 'request a quota increase through Vertex';
-  const geminiMessage = 'request a quota increase through AI Studio';
+  const agentMessage = 'request a quota increase through AI Studio';
 
   it('should format a valid API error JSON', () => {
     const errorMessage =
@@ -74,7 +74,7 @@ describe('parseAndFormatApiError', () => {
       error: {
         code: 429,
         message:
-          "Gemini 2.5 Pro Preview doesn't have a free quota tier. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits.",
+          "Agent 2.5 Pro Preview doesn't have a free quota tier. For more information on this error, head to: https://ai.google.dev/agent-api/docs/rate-limits.",
         status: 'RESOURCE_EXHAUSTED',
       },
     });
@@ -87,9 +87,9 @@ describe('parseAndFormatApiError', () => {
       },
     });
 
-    const result = parseAndFormatApiError(errorMessage, AuthType.USE_GEMINI);
-    expect(result).toContain('Gemini 2.5 Pro Preview');
-    expect(result).toContain(geminiMessage);
+    const result = parseAndFormatApiError(errorMessage, AuthType.USE_AGENT);
+    expect(result).toContain('Agent 2.5 Pro Preview');
+    expect(result).toContain(agentMessage);
   });
 
   it('should format a StructuredError', () => {
