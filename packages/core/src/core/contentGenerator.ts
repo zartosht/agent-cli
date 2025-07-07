@@ -46,6 +46,7 @@ export enum AuthType {
 export type ContentGeneratorConfig = {
   model: string;
   apiKey?: string;
+  baseURL?: string;
   vertexai?: boolean;
   authType?: AuthType | undefined;
 };
@@ -80,6 +81,7 @@ export async function createContentGeneratorConfig(
     contentGeneratorConfig.model = await getEffectiveModel(
       contentGeneratorConfig.apiKey,
       contentGeneratorConfig.model,
+      authType,
     );
 
     return contentGeneratorConfig;
@@ -87,13 +89,24 @@ export async function createContentGeneratorConfig(
 
   if (authType === AuthType.USE_OPENAI && openaiApiKey) {
     contentGeneratorConfig.apiKey = openaiApiKey;
-    // Note: We'll implement OpenAI model checking in step 4
+    contentGeneratorConfig.model = await getEffectiveModel(
+      contentGeneratorConfig.apiKey,
+      contentGeneratorConfig.model,
+      authType,
+    );
     return contentGeneratorConfig;
   }
 
   if (authType === AuthType.USE_CUSTOM_API && customApiKey) {
     contentGeneratorConfig.apiKey = customApiKey;
-    // Note: We'll implement custom API model checking in step 4
+    const customApiBaseUrl = process.env.CUSTOM_API_BASE_URL;
+    contentGeneratorConfig.baseURL = customApiBaseUrl;
+    contentGeneratorConfig.model = await getEffectiveModel(
+      contentGeneratorConfig.apiKey,
+      contentGeneratorConfig.model,
+      authType,
+      customApiBaseUrl,
+    );
     return contentGeneratorConfig;
   }
 
@@ -108,6 +121,7 @@ export async function createContentGeneratorConfig(
     contentGeneratorConfig.model = await getEffectiveModel(
       contentGeneratorConfig.apiKey,
       contentGeneratorConfig.model,
+      authType,
     );
 
     return contentGeneratorConfig;
